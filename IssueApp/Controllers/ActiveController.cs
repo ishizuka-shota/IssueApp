@@ -27,7 +27,7 @@ namespace IssueApp.Controllers
         /// <param name="request"></param>
         [HttpPost]
         [Route("api/active")]
-        public async void Post(HttpRequestMessage request)
+        public async Task Post(HttpRequestMessage request)
         {
             string content = await request.Content.ReadAsStringAsync();
             NameValueCollection json = HttpUtility.ParseQueryString(content);
@@ -36,13 +36,11 @@ namespace IssueApp.Controllers
 
             SlackModel<ButtonActionModel> model = new SlackModel<ButtonActionModel>()
             {
-                Text = data["submission"]["username"] + data["submission"]["repository"],
-                Response_type = "in_channel",
-                Replace_original = false,
-                Delete_original = true
+                Channel = data["channel"]["id"],
+                Text = data["submission"]["username"] + data["submission"]["repository"]
             };
 
-            await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/chat.postMessage");
+            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/chat.postMessage");
         }
         #endregion
     }

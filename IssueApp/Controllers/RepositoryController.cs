@@ -36,7 +36,7 @@ namespace IssueApp.Controllers
         /// <param name="request"></param>
         [HttpPost]
         [Route("api/repository")]
-        public async void Set(HttpRequestMessage request)
+        public async Task Set(HttpRequestMessage request)
         {
             string content = await request.Content.ReadAsStringAsync();
             NameValueCollection data = HttpUtility.ParseQueryString(content);
@@ -67,7 +67,7 @@ namespace IssueApp.Controllers
                 }
             };
 
-            await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/dialog.open");
+            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/dialog.open");
         }
         #endregion
     }

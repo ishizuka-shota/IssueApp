@@ -8,7 +8,6 @@ namespace IssueApp.Models.Json
         [JsonProperty("text")]
         public string Text { get; set; }
 
-        [JsonIgnore]
         [JsonProperty("channel")]
         public string Channel { get; set; }
 
@@ -18,12 +17,6 @@ namespace IssueApp.Models.Json
         [JsonIgnore]
         [JsonProperty("attachments")]
         public List<AttachmentModel<T>> Attachments { get; set; }
-
-        [JsonProperty("replace_original")]
-        public bool Replace_original { get; set; }
-
-        [JsonProperty("delete_original")]
-        public bool Delete_original { get; set; }
 
         public SlackModel()
         {
