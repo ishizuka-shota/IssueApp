@@ -1,10 +1,15 @@
 ﻿using IssueApp.AzureTableStorage;
 using IssueApp.Models.Entity;
+using IssueApp.Models.Json;
+using IssueApp.Slack;
 using Microsoft.WindowsAzure.Storage.Table;
 using Octokit;
 using System;
+using System.Collections.Specialized;
 using System.Configuration;
+using System.Net.Http;
 using System.Threading.Tasks;
+using System.Web;
 using System.Web.Http;
 using System.Web.Http.Results;
 using System.Web.Security;
@@ -19,6 +24,14 @@ namespace IssueApp.Controllers
         /// </summary>
         private GitHubClient githubClient = new GitHubClient(new ProductHeaderValue("IssueApp"));
         #endregion
+
+        #region 【変数】SlackApi実行用変数
+        /// <summary>
+        /// SlackApi実行用変数
+        /// </summary>
+        private SlackApi slackApi = new SlackApi();
+        #endregion
+
 
         // GET api/<controller>
         [HttpGet]
@@ -78,19 +91,35 @@ namespace IssueApp.Controllers
         // POST api/<controller>
         [HttpPost]
         [Route("api/github/login")]
-        public RedirectResult LoginGitHub([FromBody]string value)
+        public async Task LoginGitHub(HttpRequestMessage request)
         {
+            string content = await request.Content.ReadAsStringAsync();
+            NameValueCollection data = HttpUtility.ParseQueryString(content);
+
+            // ===========================
+            // GitHub OauthURL取得
+            // ===========================
             var csrf = Membership.GeneratePassword(20, 0);
 
-            var request = new OauthLoginRequest(ConfigurationManager.AppSettings["client_id"])
+            var oauthRequest = new OauthLoginRequest(ConfigurationManager.AppSettings["client_id"])
             {
                 Scopes = { "repo", "user" },
                 State = csrf
             };
 
-            String uri = githubClient.Oauth.GetGitHubLoginUrl(request).ToString();
+            String uri = githubClient.Oauth.GetGitHubLoginUrl(oauthRequest).ToString();
 
-            return Redirect(uri);
+            // ==============================
+            // Oauth用リダイレクトボタン作成
+            // ==============================
+            SlackModel<ButtonActionModel> model = new SlackModel<ButtonActionModel>()
+            {
+                Channel = data["channel_id"],
+                Text = "GitHubへログインしてください",
+                Unfurl_links = true
+            };
+
+            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/chat.postMessage");
         }
 
         // PUT api/<controller>/5

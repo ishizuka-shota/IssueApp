@@ -34,14 +34,38 @@ namespace IssueApp.Controllers
 
             dynamic data = JsonConvert.DeserializeObject(json["payload"]);
 
+            string callback = data["callback_id"];
+
+            // ===========================
+            // callback_idに応じて処理
+            // ===========================
+            switch(callback)
+            {
+                case "setrepository":
+                    {
+                        SetRepository(data);
+                        break;
+                    }
+                default:
+                    {
+                        break;
+                    }
+            }
+
+           
+        }
+        #endregion
+
+        public async Task SetRepository(dynamic data)
+        {
             SlackModel<ButtonActionModel> model = new SlackModel<ButtonActionModel>()
             {
                 Channel = data["channel"]["id"],
-                Text = data["submission"]["username"] + data["submission"]["repository"]
+                Text = "https://github.com/" + data["submission"]["username"] + "/" + data["submission"]["repository"],
+                Unfurl_links = true
             };
 
             HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/chat.postMessage");
         }
-        #endregion
     }
 }

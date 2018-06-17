@@ -18,6 +18,9 @@ namespace IssueApp.Models.Json
         [JsonProperty("attachments")]
         public List<AttachmentModel<T>> Attachments { get; set; }
 
+        [JsonProperty("unfurl_links")]
+        public bool Unfurl_links { get; set; }
+
         public SlackModel()
         {
             Response_type = "in_channel";
