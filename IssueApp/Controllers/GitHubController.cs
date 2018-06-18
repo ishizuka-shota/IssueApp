@@ -33,6 +33,13 @@ namespace IssueApp.Controllers
         private SlackApi slackApi = new SlackApi();
         #endregion
 
+        #region 値保存用リスエスト
+        /// <summary>
+        /// 値保存用リクエスト
+        /// </summary>
+        private new HttpRequestMessage Request;
+        #endregion
+
 
         // GET api/<controller>
         [HttpGet]
@@ -93,6 +100,8 @@ namespace IssueApp.Controllers
         [Route("api/github/login")]
         public async Task LoginGitHub(HttpRequestMessage request)
         {
+            Request = request;
+
             string content = await request.Content.ReadAsStringAsync();
             NameValueCollection data = HttpUtility.ParseQueryString(content);
 

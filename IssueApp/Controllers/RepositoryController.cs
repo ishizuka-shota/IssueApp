@@ -1,10 +1,7 @@
-﻿using IssueApp.AzureTableStorage;
-using IssueApp.Models.Entity;
-using IssueApp.Models.Json;
+﻿using IssueApp.Models.Json;
 using IssueApp.Slack;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Configuration;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;

@@ -4,7 +4,6 @@ using IssueApp.Models.Json;
 using IssueApp.Slack;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Net;
 using System.Net.Http;
