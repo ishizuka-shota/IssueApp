@@ -5,6 +5,7 @@ using IssueApp.Slack;
 using Microsoft.WindowsAzure.Storage.Table;
 using Octokit;
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Configuration;
 using System.Net.Http;
@@ -38,7 +39,6 @@ namespace IssueApp.Controllers
         [Route("api/github/oauth")]
         public async Task<RedirectResult> IssueToken(string code, string state)
         {
-
             //tokenのリクエストを作成
             var request = new OauthTokenRequest(ConfigurationManager.AppSettings["client_id"], ConfigurationManager.AppSettings["client_secret"], code);
 
@@ -107,7 +107,7 @@ namespace IssueApp.Controllers
                 State = csrf
             };
 
-            String uri = githubClient.Oauth.GetGitHubLoginUrl(oauthRequest).ToString();
+            string url = githubClient.Oauth.GetGitHubLoginUrl(oauthRequest).ToString();
 
             // ==============================
             // Oauth用リダイレクトボタン作成
@@ -116,20 +116,27 @@ namespace IssueApp.Controllers
             {
                 Channel = data["channel_id"],
                 Text = "GitHubへログインしてください",
-                Unfurl_links = true
+                Response_type = "ephemeral",
+                Attachments = new List<AttachmentModel<ButtonActionModel>>()
+                {
+                    new AttachmentModel<ButtonActionModel>()
+                    {
+                        Fallback = "The GitHub Oauth URL",
+                        Actions = new List<ButtonActionModel>()
+                        {
+                            new ButtonActionModel()
+                            {
+                                Type = "button",
+                                Name = "github_oauth_url",
+                                Text = "ログイン",
+                                Url = url
+                            }
+                        }
+                    }
+                }
             };
 
             HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/chat.postMessage", data["team_id"]);
-        }
-
-        // PUT api/<controller>/5
-        public void Put(int id, [FromBody]string value)
-        {
-        }
-
-        // DELETE api/<controller>/5
-        public void Delete(int id)
-        {
         }
     }
 }

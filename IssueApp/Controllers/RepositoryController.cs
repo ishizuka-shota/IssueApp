@@ -14,13 +14,6 @@ namespace IssueApp.Controllers
 {
     public class RepositoryController : ApiController
     {
-        #region 【変数】Entity操作用変数(ChannelId)
-        /// <summary>
-        /// Entity操作用変数(ChannelId)
-        /// </summary>
-        private static EntityOperation<ChannelIdEntity> entityOperation_ChannelId = new EntityOperation<ChannelIdEntity>();
-        #endregion
-
         #region 【変数】SlackApi実行用変数
         /// <summary>
         /// SlackApi実行用変数

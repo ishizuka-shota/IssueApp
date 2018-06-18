@@ -8,16 +8,15 @@ namespace IssueApp.Models.Entity
     /// </summary>
     public class ChannelIdEntity : TableEntity
     {
-        public ChannelIdEntity(string channelId, string repository)
+        public ChannelIdEntity(string channelId, string channelName, string repository)
         {
             PartitionKey = channelId;
-            RowKey = "repository";
+            RowKey = channelName;
             Repository = repository;
         }
 
         public ChannelIdEntity() { }
 
         public string Repository { get; set; }
-        public string BotToken { get; set; }
     }
 }

@@ -1,24 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+﻿using Newtonsoft.Json;
 
 namespace IssueApp.Models.Json
 {
     public class ButtonActionModel
     {
+        [JsonProperty("name")]
         public string Name { get; set; }
 
+        [JsonProperty("text")]
         public string Text { get; set; }
 
+        [JsonProperty("type")]
         public string Type { get; set; }
 
+        [JsonProperty("options")]
         public string Options { get; set; }
 
-        public ButtonActionModel(String value)
-        {
-            Type = "button";
-            Options = value;
-        }
+        [JsonProperty("url")]
+        public string Url { get; set; }
     }
 }

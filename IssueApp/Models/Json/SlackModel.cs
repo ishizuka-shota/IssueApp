@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace IssueApp.Models.Json
 {
@@ -14,16 +15,10 @@ namespace IssueApp.Models.Json
         [JsonProperty("response_type")]
         public string Response_type { get; set; }
 
-        [JsonIgnore]
         [JsonProperty("attachments")]
         public List<AttachmentModel<T>> Attachments { get; set; }
 
         [JsonProperty("unfurl_links")]
         public bool Unfurl_links { get; set; }
-
-        public SlackModel()
-        {
-            Response_type = "in_channel";
-        }
     }
 }

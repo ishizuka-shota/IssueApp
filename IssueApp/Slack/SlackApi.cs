@@ -1,8 +1,8 @@
 ﻿using IssueApp.AzureTableStorage;
 using IssueApp.Models.Entity;
 using Microsoft.WindowsAzure.Storage.Table;
+using Newtonsoft.Json;
 using System;
-using System.Configuration;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -25,7 +25,7 @@ namespace IssueApp.Slack
             using (HttpClient client = CreateHeaderAsJson(teamId))
             {
                 // モデルからJson作成s
-                string json = Newtonsoft.Json.JsonConvert.SerializeObject(model);
+                string json = JsonConvert.SerializeObject(model, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
 
                 // リクエスト作成
                 HttpRequestMessage httpRequest = new HttpRequestMessage(HttpMethod.Post, apiUri)
