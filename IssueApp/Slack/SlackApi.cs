@@ -1,5 +1,9 @@
-﻿using System;
+﻿using IssueApp.AzureTableStorage;
+using IssueApp.Models.Entity;
+using Microsoft.WindowsAzure.Storage.Table;
+using System;
 using System.Configuration;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -16,9 +20,9 @@ namespace IssueApp.Slack
         /// <param name="slackModel"></param>
         /// <param name="apiUri"></param>
         /// <returns></returns>
-        public async Task<HttpResponseMessage> ExecutePostApiAsJson(object model, string apiUri)
+        public async Task<HttpResponseMessage> ExecutePostApiAsJson(object model, string apiUri, string teamId)
         {
-            using (HttpClient client = CreateHeaderAsJson())
+            using (HttpClient client = CreateHeaderAsJson(teamId))
             {
                 // モデルからJson作成s
                 string json = Newtonsoft.Json.JsonConvert.SerializeObject(model);
@@ -42,16 +46,29 @@ namespace IssueApp.Slack
         /// Json送信SlackApi用ヘッダー作成
         /// </summary>
         /// <returns></returns>
-        public HttpClient CreateHeaderAsJson()
+        public HttpClient CreateHeaderAsJson(string teamId)
         {
-            // クライアント作成
-            HttpClient client = new HttpClient();
+            // PartitionKeyがチャンネルIDのEntityを取得するクエリ
+            TableQuery<TeamIdEntity> query = new TableQuery<TeamIdEntity>()
+                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, teamId));
 
-            // ヘッダー情報挿入
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ConfigurationManager.AppSettings["botToken"]);
+            // クエリ実行結果で要素がひとつでもあるかどうか
+            if (StorageOperation.GetTableIfNotExistsCreate("team").ExecuteQuery(query).Any())
+            {
+                // クライアント作成
+                HttpClient client = new HttpClient();
 
-            return client;
+                // ヘッダー情報挿入
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.Authorization = 
+                    new AuthenticationHeaderValue("Bearer", StorageOperation.GetTableIfNotExistsCreate("team").ExecuteQuery(query).First().Token);
+
+                return client;
+            }
+            else
+            {
+                throw new Exception();
+            }
         }
         #endregion
     }

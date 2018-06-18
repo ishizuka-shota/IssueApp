@@ -65,7 +65,9 @@ namespace IssueApp.Controllers
                 Unfurl_links = true
             };
 
-            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/chat.postMessage");
+            string teamId = data["team"]["id"];
+
+            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/chat.postMessage", teamId);
         }
     }
 }

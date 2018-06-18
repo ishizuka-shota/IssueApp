@@ -67,7 +67,7 @@ namespace IssueApp.Controllers
                 }
             };
 
-            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/dialog.open");
+            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/dialog.open", data["team_id"]);
         }
         #endregion
     }

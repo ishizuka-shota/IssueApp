@@ -1,10 +1,7 @@
 ﻿using IssueApp.Models.Json;
 using IssueApp.Slack;
-using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
@@ -66,7 +63,7 @@ namespace IssueApp.Controllers
                 }
             };
 
-            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/dialog.open");
+            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/dialog.open", data["team_id"]);
 
         }
 

@@ -119,7 +119,7 @@ namespace IssueApp.Controllers
                 Unfurl_links = true
             };
 
-            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/chat.postMessage");
+            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/chat.postMessage", data["team_id"]);
         }
 
         // PUT api/<controller>/5

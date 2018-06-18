@@ -3,6 +3,7 @@ using IssueApp.Models.Entity;
 using Newtonsoft.Json;
 using System;
 using System.Configuration;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
@@ -12,19 +13,27 @@ namespace IssueApp.Controllers
 {
     public class SlackController : ApiController
     {
-        #region 【変数】Entity操作用変数(ChannelId)
+        #region 【変数】Entity操作用変数(TeamId)
         /// <summary>
-        /// Entity操作用変数(CHannelId)
+        /// Entity操作用変数(TeamId)
         /// </summary>
-        private static EntityOperation<ChannelIdEntity> entityOperation_ChannelId = new EntityOperation<ChannelIdEntity>();
+        private static EntityOperation<TeamIdEntity> entityOperation_TeamId = new EntityOperation<TeamIdEntity>();
         #endregion
 
-
-        // GET api/<controller>
+        #region Slack Oauth認証
+        /// <summary>
+        /// Slack Oauth認証
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="state"></param>
+        /// <returns></returns>
         [HttpGet]
         [Route("api/slack/oauth")]
         public async Task<HttpResponseMessage> SlackOauth(string code, string state)
         {
+            // ==============================
+            // アクセストークン発行
+            // ==============================
             HttpClient client = new HttpClient();
 
             var query = HttpUtility.ParseQueryString(string.Empty);
@@ -39,19 +48,42 @@ namespace IssueApp.Controllers
 
             HttpResponseMessage response = await client.GetAsync(builder.Uri.ToString());
 
+            // ================================
+            // アクセストークンをStorageに保存
+            // ================================
             string content = await response.Content.ReadAsStringAsync();
             dynamic data = JsonConvert.DeserializeObject(content);
 
-            // リストから指定したラベルを基にテンプレートエンティティを作成
-            //ChannelIdEntity updateEntity = entityOperation_ChannelId.RetrieveEntity(GitHubDialog.channelId, "repository", "repository");
+            string teamId = data["team_id"];
+            string teamName = data["team_name"];
+            string token = data["bot"]["bot_access_token"];
 
-            //updateEntity.BotToken = data["bot"]["bot_access_token"];
+            // 保存するトークンを入れたentityを作成
+            TeamIdEntity entity = new TeamIdEntity(teamId, teamName, token);
 
-            // Entityで上書きする
-            //ChannelIdEntity entity = entityOperation_ChannelId.UpdateEntityResult(updateEntity, string.Empty).Result as ChannelIdEntity;
+            // Entityがなければ挿入、あれば更新する
+            var insertResult = entityOperation_TeamId.InsertOrUpdateEntityResult(entity, "team");
 
-            return response;
-
+            // 結果があるかどうか
+            if (insertResult != null)
+            {
+                // あったら認証成功
+                return new HttpResponseMessage()
+                {
+                    StatusCode = HttpStatusCode.OK,
+                    Content = new StringContent("SlackのOauth認証に成功しました")
+                };
+            }
+            else
+            {
+                // なければ認証失敗
+                return new HttpResponseMessage()
+                {
+                    StatusCode = HttpStatusCode.BadRequest,
+                    Content = new StringContent("SlackのOauth認証に失敗しました")
+                };
+            }
         }
+        #endregion
     }
 }

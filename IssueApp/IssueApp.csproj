@@ -200,6 +200,7 @@
     </Compile>
     <Compile Include="Models\Constants\Slack.cs" />
     <Compile Include="Models\Entity\ChannelIdEntity.cs" />
+    <Compile Include="Models\Entity\TeamIdEntity.cs" />
     <Compile Include="Models\Entity\TemplateEntity.cs" />
     <Compile Include="Models\Entity\UserEntity.cs" />
     <Compile Include="Models\Json\AttachmentModel.cs" />
@@ -266,7 +267,6 @@
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
-    <None Include="Web.local.config" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
