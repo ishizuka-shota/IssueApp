@@ -4,7 +4,6 @@ using IssueApp.Models.Json;
 using IssueApp.Slack;
 using Microsoft.WindowsAzure.Storage.Table;
 using Octokit;
-using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Configuration;
@@ -33,17 +32,9 @@ namespace IssueApp.Controllers
         private SlackApi slackApi = new SlackApi();
         #endregion
 
-        #region 値保存用リスエスト
-        /// <summary>
-        /// 値保存用リクエスト
-        /// </summary>
-        private new HttpRequestMessage Request;
-        #endregion
-
-
         // GET api/<controller>
         [HttpGet]
-        [Route("api/github/oauth")]
+        [Route("api/github/token")]
         public async Task<RedirectResult> IssueToken(string code, string state)
         {
             //tokenのリクエストを作成
@@ -53,13 +44,13 @@ namespace IssueApp.Controllers
             var token = await githubClient.Oauth.CreateAccessToken(request);
 
             //ユーザエンティティの操作変数作成
-            EntityOperation<UserEntity> entityOperation_Template = new EntityOperation<UserEntity>();
+            EntityOperation<UserEntity> entityOperation_User = new EntityOperation<UserEntity>();
 
             //作成or更新を行うユーザエンティティ作成
             UserEntity entity = new UserEntity("GitHubDialog.activity.From.Id", "GitHubDialog.activity.From.Name", token.AccessToken);
 
             //エンティティを操作変数を用いて作成or更新
-            TableResult result = entityOperation_Template.InsertOrUpdateEntityResult(entity, "user");
+            TableResult result = entityOperation_User.InsertOrUpdateEntityResult(entity, "user");
 
             #region 未使用API送信
             ////API送信用ウェブクライアント
@@ -89,19 +80,11 @@ namespace IssueApp.Controllers
 
         }
 
-        // GET api/<controller>/5
-        public string Get(int id)
-        {
-            return "value";
-        }
-
         // POST api/<controller>
         [HttpPost]
-        [Route("api/github/login")]
+        [Route("api/github/oauth")]
         public async Task LoginGitHub(HttpRequestMessage request)
         {
-            Request = request;
-
             string content = await request.Content.ReadAsStringAsync();
             NameValueCollection data = HttpUtility.ParseQueryString(content);
 
@@ -145,7 +128,7 @@ namespace IssueApp.Controllers
                 }
             };
 
-            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/chat.postMessage", data["team_id"]);
+            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, data["response_url"], data["team_id"]);
         }
     }
 }

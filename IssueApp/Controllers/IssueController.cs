@@ -32,7 +32,9 @@ namespace IssueApp.Controllers
         }
 
         // POST api/values
-        public async Task Post(HttpRequestMessage request)
+        [HttpPost]
+        [Route("api/issue")]
+        public async Task Create(HttpRequestMessage request)
         {
             string content = await request.Content.ReadAsStringAsync();
             NameValueCollection data = HttpUtility.ParseQueryString(content);

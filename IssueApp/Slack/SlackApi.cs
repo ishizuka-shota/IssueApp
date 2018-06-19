@@ -48,7 +48,7 @@ namespace IssueApp.Slack
         /// <returns></returns>
         public HttpClient CreateHeaderAsJson(string teamId)
         {
-            // PartitionKeyがチャンネルIDのEntityを取得するクエリ
+            // PartitionKeyがチームIDのEntityを取得するクエリ
             TableQuery<TeamIdEntity> query = new TableQuery<TeamIdEntity>()
                 .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, teamId));
 
