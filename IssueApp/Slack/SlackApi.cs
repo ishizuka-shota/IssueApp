@@ -24,7 +24,7 @@ namespace IssueApp.Slack
         {
             using (HttpClient client = CreateHeaderAsJson(teamId))
             {
-                // モデルからJson作成s
+                // モデルからJson作成
                 string json = JsonConvert.SerializeObject(model, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
 
                 // リクエスト作成
@@ -52,8 +52,10 @@ namespace IssueApp.Slack
             TableQuery<TeamIdEntity> query = new TableQuery<TeamIdEntity>()
                 .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, teamId));
 
+            var entityList = StorageOperation.GetTableIfNotExistsCreate("team").ExecuteQuery(query);
+
             // クエリ実行結果で要素がひとつでもあるかどうか
-            if (StorageOperation.GetTableIfNotExistsCreate("team").ExecuteQuery(query).Any())
+            if (entityList.Any())
             {
                 // クライアント作成
                 HttpClient client = new HttpClient();
@@ -61,7 +63,7 @@ namespace IssueApp.Slack
                 // ヘッダー情報挿入
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 client.DefaultRequestHeaders.Authorization = 
-                    new AuthenticationHeaderValue("Bearer", StorageOperation.GetTableIfNotExistsCreate("team").ExecuteQuery(query).First().Token);
+                    new AuthenticationHeaderValue("Bearer", entityList.First().Token);
 
                 return client;
             }

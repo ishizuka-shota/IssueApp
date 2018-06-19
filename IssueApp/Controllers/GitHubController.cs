@@ -32,61 +32,66 @@ namespace IssueApp.Controllers
         private SlackApi slackApi = new SlackApi();
         #endregion
 
-        // GET api/<controller>
+        #region 【変数】method間値渡し用変数
+        /// <summary>
+        /// 値渡し用変数
+        /// </summary>
+        private static NameValueCollection UserData;
+        #endregion
+
+
+        #region 【GET】GitHubアクセストークン発行
+        /// <summary>
+        /// 【GET】GitHubアクセストークン発行
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="state"></param>
+        /// <returns></returns>
         [HttpGet]
         [Route("api/github/token")]
         public async Task<RedirectResult> IssueToken(string code, string state)
         {
-            //tokenのリクエストを作成
+            // Oauth認証時に格納したユーザデータを取得
+            NameValueCollection data = UserData;
+
+            // ===========================
+            // GitHubアクセストークン発行
+            // ===========================
             var request = new OauthTokenRequest(ConfigurationManager.AppSettings["client_id"], ConfigurationManager.AppSettings["client_secret"], code);
 
-            //リクエストを送信
             var token = await githubClient.Oauth.CreateAccessToken(request);
 
-            //ユーザエンティティの操作変数作成
+            // ============================================
+            // slackユーザとGitHubアクセストークンの紐付け
+            // ============================================
             EntityOperation<UserEntity> entityOperation_User = new EntityOperation<UserEntity>();
 
             //作成or更新を行うユーザエンティティ作成
-            UserEntity entity = new UserEntity("GitHubDialog.activity.From.Id", "GitHubDialog.activity.From.Name", token.AccessToken);
+            UserEntity entity = new UserEntity(data["user_id"], data["user_name"], token.AccessToken);
 
             //エンティティを操作変数を用いて作成or更新
             TableResult result = entityOperation_User.InsertOrUpdateEntityResult(entity, "user");
 
-            #region 未使用API送信
-            ////API送信用ウェブクライアント
-            //using (WebClient wc = new WebClient())
-            //{
-            //    //必要なクエリ情報を作成し、格納
-            //    NameValueCollection nvc = new NameValueCollection();
-            //    nvc.Add("client_id", ConfigurationManager.AppSettings["client_id"]);
-            //    nvc.Add("client_secret", ConfigurationManager.AppSettings["client_secret"]);
-            //    nvc.Add("code", code);
-            //    nvc.Add("state", state);
-            //    wc.QueryString = nvc;
-
-            //    //データを送信し、また受信する
-            //    byte[] response =  wc.UploadValues("https://github.com/login/oauth/access_token", nvc);
-
-            //    //文字列化した受信バイトデータをNameValueCollectionに換装
-            //    nvc = HttpUtility.ParseQueryString(wc.Encoding.GetString(response));
-
-            //    GitHubDialog.accessToken = nvc.Get("access_token");
-
-            //    return Redirect("https://slack.com");
-            //}
-            #endregion
-
-            return Redirect("https://slack.com");
+            return Redirect("https://" + data["team_domain"] + ".slack.com/messages");
 
         }
+        #endregion
 
-        // POST api/<controller>
+        #region 【POST】GitHub Oauth認証
+        /// <summary>
+        /// 【POST】GitHub Oauth認証
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("api/github/oauth")]
         public async Task LoginGitHub(HttpRequestMessage request)
         {
             string content = await request.Content.ReadAsStringAsync();
             NameValueCollection data = HttpUtility.ParseQueryString(content);
+
+            // アクセストークン保存の為のユーザデータを格納
+            UserData = data;
 
             // ===========================
             // GitHub OauthURL取得
@@ -121,7 +126,8 @@ namespace IssueApp.Controllers
                                 Type = "button",
                                 Name = "github_oauth_url",
                                 Text = "ログイン",
-                                Url = url
+                                Url = url,
+                                Style = "primary"
                             }
                         }
                     }
@@ -130,5 +136,6 @@ namespace IssueApp.Controllers
 
             HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, data["response_url"], data["team_id"]);
         }
+        #endregion
     }
 }

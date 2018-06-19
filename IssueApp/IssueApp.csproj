@@ -195,6 +195,7 @@
     <Compile Include="Controllers\RepositoryController.cs" />
     <Compile Include="Controllers\SlackController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
+    <Compile Include="GitHub\GitHubApi.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
