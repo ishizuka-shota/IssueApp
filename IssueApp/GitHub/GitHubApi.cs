@@ -8,14 +8,20 @@ namespace IssueApp.GitHub
 {
     public class GitHubApi
     {
-        private static GitHubClient client = new GitHubClient(new ProductHeaderValue("IssueApp"));
+        #region GitHubクライアント
+        /// <summary>
+        /// GitHubクライアント
+        /// </summary>
+        public static GitHubClient client = new GitHubClient(new ProductHeaderValue("IssueApp"));
+        #endregion
+
 
         #region GitHubアクセストークンセット
         /// <summary>
         /// GitHubアクセストークンセット
         /// </summary>
         /// <param name="slack_userId"></param>
-        public void SetCredential(string slack_userId)
+        public static void SetCredential(string slack_userId)
         {
             // PartitionKeyがSlackユーザIDのEntityを取得するクエリ
             TableQuery<UserEntity> query = new TableQuery<UserEntity>()
