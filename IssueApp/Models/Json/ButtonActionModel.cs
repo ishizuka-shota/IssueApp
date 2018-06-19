@@ -18,5 +18,8 @@ namespace IssueApp.Models.Json
 
         [JsonProperty("url")]
         public string Url { get; set; }
+
+        [JsonProperty("style")]
+        public string Style { get; set; }
     }
 }

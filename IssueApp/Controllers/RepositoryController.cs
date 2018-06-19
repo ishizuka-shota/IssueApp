@@ -42,10 +42,14 @@ namespace IssueApp.Controllers
             // 引数の値
             string method = data["text"];
 
+            // ===========================
             // 引数の値で処理を分ける
+            // ===========================
             switch (method)
             {
+                // ===========================
                 // リポジトリ登録
+                // ===========================
                 case "set":
                     {
                         DialogModel model = new DialogModel()
@@ -77,18 +81,24 @@ namespace IssueApp.Controllers
                         HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/dialog.open", data["team_id"]);
                         break;
                     }
+                // ===========================
                 // 登録リポジトリ照会
+                // ===========================
                 case "get":
                     {
                         // PartitionKeyがチャンネルIDのEntityを取得するクエリ
                         TableQuery<ChannelIdEntity> query = new TableQuery<ChannelIdEntity>()
                             .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, data["channel_id"]));
 
+                        // クエリ実行
+                        var entityList = StorageOperation.GetTableIfNotExistsCreate("channel").ExecuteQuery(query);
+
                         string text = string.Empty;
+
                         // クエリ実行結果で要素がひとつでもあるかどうか
-                        if (StorageOperation.GetTableIfNotExistsCreate("channel").ExecuteQuery(query).Any())
+                        if (entityList.Any())
                         {
-                            string repository = StorageOperation.GetTableIfNotExistsCreate("channel").ExecuteQuery(query).First().Repository;
+                            string repository = entityList.First().Repository;
                             text = "登録リポジトリのURLを照会します" + Environment.NewLine + "https://github.com/" + repository;
                         }
                         else
@@ -106,7 +116,9 @@ namespace IssueApp.Controllers
                         HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, data["response_url"], data["team_id"]);
                         break;
                     }
+                // ===========================
                 // それ以外
+                // ===========================
                 default:
                     {
                         SlackModel<ButtonActionModel> model = new SlackModel<ButtonActionModel>()

@@ -1,4 +1,5 @@
-﻿using IssueApp.Models.Json;
+﻿using IssueApp.GitHub;
+using IssueApp.Models.Json;
 using IssueApp.Slack;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -18,6 +19,12 @@ namespace IssueApp.Controllers
         private SlackApi slackApi = new SlackApi();
         #endregion
 
+        #region 【変数】GitHubApi実行用変数
+        /// <summary>
+        /// GitHubApi実行用変数
+        /// </summary>
+        private GitHubApi githubApi = new GitHubApi();
+        #endregion
 
         // GET api/values
         public IEnumerable<string> Get()
@@ -31,13 +38,20 @@ namespace IssueApp.Controllers
             return "value";
         }
 
-        // POST api/values
+        #region Issue作成エンドポイント
+        /// <summary>
+        /// Issue作成エンドポイント
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("api/issue")]
         public async Task Create(HttpRequestMessage request)
         {
             string content = await request.Content.ReadAsStringAsync();
             NameValueCollection data = HttpUtility.ParseQueryString(content);
+
+            githubApi.SetCredential(data["user_id"]);
 
             DialogModel model = new DialogModel()
             {
@@ -68,6 +82,7 @@ namespace IssueApp.Controllers
             HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/dialog.open", data["team_id"]);
 
         }
+        #endregion
 
         // PUT api/values/5
         public void Put(int id, [FromBody]string value)

@@ -20,6 +20,7 @@ namespace IssueApp.Controllers
         private static EntityOperation<TeamIdEntity> entityOperation_TeamId = new EntityOperation<TeamIdEntity>();
         #endregion
 
+
         #region Slack Oauth認証
         /// <summary>
         /// Slack Oauth認証
