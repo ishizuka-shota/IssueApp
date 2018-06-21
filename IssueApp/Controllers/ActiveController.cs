@@ -87,7 +87,7 @@ namespace IssueApp.Controllers
         public async Task SetRepository(SlackRequest.Active<RepositoryData> data)
         {
             // 保存するトークンを入れたentityを作成
-            ChannelIdEntity entity = new ChannelIdEntity(data.Channel.Id, data.Channel.Name, data.Submission.Repository);
+            ChannelIdEntity entity = new ChannelIdEntity(data.Channel.Id, data.Channel.Name, data.Submission.UserName + "/" + data.Submission.Repository);
 
             // Entityがなければ挿入、あれば更新する
             var insertResult = entityOperation_ChannelId.InsertOrUpdateEntityResult(entity, "channel");
