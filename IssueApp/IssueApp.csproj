@@ -188,6 +188,7 @@
     <Compile Include="Areas\HelpPage\XmlDocumentationProvider.cs" />
     <Compile Include="AzureTableStorage\EntityOperation.cs" />
     <Compile Include="AzureTableStorage\StorageOperation.cs" />
+    <Compile Include="Common\ErrorHandler.cs" />
     <Compile Include="Controllers\ActiveController.cs" />
     <Compile Include="Controllers\GitHubController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
