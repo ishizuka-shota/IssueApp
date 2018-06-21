@@ -212,6 +212,7 @@
     <Compile Include="Models\Json\OptionModel.cs" />
     <Compile Include="Models\Json\PostMessageModel.cs" />
     <Compile Include="Models\Json\SlackModel.cs" />
+    <Compile Include="Models\Request\SlackRequest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Slack\SlackApi.cs" />
   </ItemGroup>
@@ -273,7 +274,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Models\Request\" />
     <Folder Include="Models\Response\" />
   </ItemGroup>
   <ItemGroup>

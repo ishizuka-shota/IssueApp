@@ -1,10 +1,15 @@
 ﻿using IssueApp.AzureTableStorage;
+using IssueApp.GitHub;
 using IssueApp.Models.Entity;
 using IssueApp.Models.Json;
+using IssueApp.Models.Request;
 using IssueApp.Slack;
+using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
+using Octokit;
 using System;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -53,12 +58,14 @@ namespace IssueApp.Controllers
             {
                 case "setrepository":
                     {
-                        SetRepository(data);
+                        var req = JsonConvert.DeserializeObject<SlackRequest.Active<RepositoryData>>(json["payload"]);
+                        await SetRepository(req);
                         break;
                     }
-                case "url":
+                case "createissue":
                     {
-                        RedirectUrl(data);
+                        var req = JsonConvert.DeserializeObject<SlackRequest.Active<IssueData>>(json["payload"]);
+                        await CreateIssue(req);
                         break;
                     }
                 default:
@@ -77,14 +84,10 @@ namespace IssueApp.Controllers
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        public async Task SetRepository(dynamic data)
+        public async Task SetRepository(SlackRequest.Active<RepositoryData> data)
         {
-            string channelId = data["channel"]["id"];
-            string channelName = data["channel"]["name"];
-            string repository = data["submission"]["username"] + "/" + data["submission"]["repository"];
-
             // 保存するトークンを入れたentityを作成
-            ChannelIdEntity entity = new ChannelIdEntity(channelId, channelName, repository);
+            ChannelIdEntity entity = new ChannelIdEntity(data.Channel.Id, data.Channel.Name, data.Submission.Repository);
 
             // Entityがなければ挿入、あれば更新する
             var insertResult = entityOperation_ChannelId.InsertOrUpdateEntityResult(entity, "channel");
@@ -94,7 +97,7 @@ namespace IssueApp.Controllers
             // 結果があるかどうか
             if (insertResult != null)
             {
-                text = "リポジトリの登録に成功しました。" + Environment.NewLine + "https://github.com/" + data["submission"]["username"] + "/" + data["submission"]["repository"];
+                text = "リポジトリの登録に成功しました。" + Environment.NewLine + "https://github.com/" + data.Submission.UserName + "/" + data.Submission.Repository;
             }
             else
             {
@@ -103,23 +106,71 @@ namespace IssueApp.Controllers
 
             SlackModel<ButtonActionModel> model = new SlackModel<ButtonActionModel>()
             {
-                Channel = data["channel"]["id"],
+                Channel = data.Channel.Id,
                 Text = text,
                 Response_type = "in_channel",
                 Unfurl_links = true
             };
 
-            string teamId = data["team"]["id"];
-
-            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/chat.postMessage", teamId);
+            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/chat.postMessage", data.Team.Id);
         }
         #endregion
 
-        public void RedirectUrl(dynamic data)
+        #region Issue作成
+        /// <summary>
+        /// Issue作成
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public async Task CreateIssue(SlackRequest.Active<IssueData> data)
         {
-            string url = data["actions"][0]["value"];
+            NewIssue newIssue = new NewIssue(data.Submission.Title)
+            {
+                Body = data.Submission.Body
+            };
 
-            Redirect(url);
+            newIssue.Labels.Add(data.Submission.Label);
+            
+            // =============================
+            // GitHubアクセストークンの設定
+            // =============================
+            GitHubApi.SetCredential(data.User.Id);
+
+            // PartitionKeyがチャンネルIDのEntityを取得するクエリ
+            TableQuery<ChannelIdEntity> query = new TableQuery<ChannelIdEntity>()
+                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, data.Channel.Id));
+
+            // クエリ実行
+            var entityList = StorageOperation.GetTableIfNotExistsCreate("channel").ExecuteQuery(query);
+
+            SlackModel<ButtonActionModel> model = new SlackModel<ButtonActionModel>();
+
+            if (entityList.Any())
+            {
+                string repository = entityList.First().Repository;
+                var issue = await GitHubApi.client.Issue.Create(repository.Split('/')[0], repository.Split('/')[1], newIssue);
+
+                model = new SlackModel<ButtonActionModel>()
+                {
+                    Channel = data.Channel.Id,
+                    Text = "Issueが登録されました" + Environment.NewLine + "https://github.com/" + repository + "/issues/" + issue.Number,
+                    Response_type = "in_channel",
+                    Unfurl_links = true
+                };
+            }
+            else
+            {
+                model = new SlackModel<ButtonActionModel>()
+                {
+                    Channel = data.Channel.Id,
+                    Text = "リポジトリが登録されていません",
+                    Response_type = "ephemeral"
+                };
+            }
+
+            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, data.Response_url, data.Team.Id);
+
         }
+        #endregion
     }
 }

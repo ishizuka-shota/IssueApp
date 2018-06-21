@@ -1,8 +1,12 @@
-﻿using IssueApp.GitHub;
+﻿using IssueApp.AzureTableStorage;
+using IssueApp.GitHub;
+using IssueApp.Models.Entity;
 using IssueApp.Models.Json;
 using IssueApp.Slack;
+using Microsoft.WindowsAzure.Storage.Table;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
@@ -19,24 +23,6 @@ namespace IssueApp.Controllers
         private SlackApi slackApi = new SlackApi();
         #endregion
 
-        #region 【変数】GitHubApi実行用変数
-        /// <summary>
-        /// GitHubApi実行用変数
-        /// </summary>
-        private GitHubApi githubApi = new GitHubApi();
-        #endregion
-
-        // GET api/values
-        public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }
-
-        // GET api/values/5
-        public string Get(int id)
-        {
-            return "value";
-        }
 
         #region Issue作成エンドポイント
         /// <summary>
@@ -48,50 +34,86 @@ namespace IssueApp.Controllers
         [Route("api/issue")]
         public async Task Create(HttpRequestMessage request)
         {
+            // ===========================
+            // リクエストの取得・整形
+            // ===========================
             string content = await request.Content.ReadAsStringAsync();
             NameValueCollection data = HttpUtility.ParseQueryString(content);
 
-            githubApi.SetCredential(data["user_id"]);
+            // =============================
+            // GitHubアクセストークンの設定
+            // =============================
+            GitHubApi.SetCredential(data["user_id"]);
 
-            DialogModel model = new DialogModel()
+            // =============================
+            // 登録リポジトリ取得
+            // =============================
+            TableQuery<ChannelIdEntity> query = new TableQuery<ChannelIdEntity>()
+                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, data["channel_id"]));
+
+            // クエリ実行
+            var entityList = StorageOperation.GetTableIfNotExistsCreate("channel").ExecuteQuery(query);
+
+            // クエリ実行結果で要素がひとつでもあるかどうか
+            if (entityList.Any())
             {
-                Trigger_id = data["trigger_id"],
-                Dialog = new Dialog()
+                string repository = entityList.First().Repository;
+
+                // クライアントを用いてリポジトリ名からIssueのラベルを取得
+                var labelList = await GitHubApi.client.Issue.Labels.GetAllForRepository(repository.Split('/')[0], repository.Split('/')[1]);
+
+                // ラベル変数リストを文字列リストに変換
+                var labelNameList = labelList.ToList().ConvertAll(x => x.Name);
+
+                DialogModel model = new DialogModel()
                 {
-                    Callback_id = "setrepository",
-                    Title = "Issue登録",
-                    Submit_label = "登録",
-                    Elements = new List<Element>
+                    Trigger_id = data["trigger_id"],
+                    Dialog = new Dialog()
                     {
-                        new Element()
+                        Callback_id = "createissue",
+                        Title = "Issue登録",
+                        Submit_label = "登録",
+                        Elements = new List<Element>
                         {
-                            Type = "select",
-                            Label = "タイトル",
-                            Name = "title"
-                        },
-                        new Element()
-                        {
-                            Type = "text",
-                            Label = "タイトル",
-                            Name = "title"
+                            new Element()
+                            {
+                                Type = "select",
+                                Label = "ラベル",
+                                Name = "label",
+                                Options = labelNameList.ConvertAll(x => new Option(x, x))
+
+                            },
+                            new Element()
+                            {
+                                Type = "text",
+                                Label = "タイトル",
+                                Name = "title"
+                            },
+                            new Element()
+                            {
+                                Type = "textarea",
+                                Label = "本文",
+                                Name = "body"
+                            }
                         }
                     }
-                }
-            };
+                };
 
-            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/dialog.open", data["team_id"]);
+                HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/dialog.open", data["team_id"]);
+            }
+            else
+            {
+                SlackModel<ButtonActionModel> model = new SlackModel<ButtonActionModel>()
+                {
+                    Channel = data["channel_id"],
+                    Text = "登録リポジトリは存在しません",
+                    Response_type = "ephemeral"
+                };
 
+                HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, data["response_url"], data["team_id"]);
+            }
         }
         #endregion
 
-        // PUT api/values/5
-        public void Put(int id, [FromBody]string value)
-        {
-        }
-
-        // DELETE api/values/5
-        public void Delete(int id)
-        {
-        }
     }
 }
