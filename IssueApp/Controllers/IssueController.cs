@@ -23,24 +23,6 @@ namespace IssueApp.Controllers
         private SlackApi slackApi = new SlackApi();
         #endregion
 
-        #region 【変数】GitHubApi実行用変数
-        /// <summary>
-        /// GitHubApi実行用変数
-        /// </summary>
-        private GitHubApi githubApi = new GitHubApi();
-        #endregion
-
-        // GET api/values
-        public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }
-
-        // GET api/values/5
-        public string Get(int id)
-        {
-            return "value";
-        }
 
         #region Issue作成エンドポイント
         /// <summary>
@@ -72,8 +54,6 @@ namespace IssueApp.Controllers
             // クエリ実行
             var entityList = StorageOperation.GetTableIfNotExistsCreate("channel").ExecuteQuery(query);
 
-            List<string> labelNameList = null;
-
             // クエリ実行結果で要素がひとつでもあるかどうか
             if (entityList.Any())
             {
@@ -83,7 +63,7 @@ namespace IssueApp.Controllers
                 var labelList = await GitHubApi.client.Issue.Labels.GetAllForRepository(repository.Split('/')[0], repository.Split('/')[1]);
 
                 // ラベル変数リストを文字列リストに変換
-                labelNameList = labelList.ToList().ConvertAll(x => x.Name);
+                var labelNameList = labelList.ToList().ConvertAll(x => x.Name);
 
                 DialogModel model = new DialogModel()
                 {
@@ -135,14 +115,5 @@ namespace IssueApp.Controllers
         }
         #endregion
 
-        // PUT api/values/5
-        public void Put(int id, [FromBody]string value)
-        {
-        }
-
-        // DELETE api/values/5
-        public void Delete(int id)
-        {
-        }
     }
 }
