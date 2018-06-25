@@ -1,40 +1,24 @@
-﻿using IssueApp.AzureTableStorage;
-using IssueApp.GitHub;
+﻿using IssueApp.GitHub;
 using IssueApp.Models.Entity;
 using IssueApp.Models.Json;
 using IssueApp.Models.Request;
-using IssueApp.Slack;
-using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
 using Octokit;
 using System;
 using System.Collections.Specialized;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web;
 using System.Web.Http;
+using static IssueApp.Common.CommonUtility;
+using static IssueApp.Common.ErrorHandler;
+using static IssueApp.Common.RepositoryOperation;
+
 
 namespace IssueApp.Controllers
 {
     public class ActiveController : ApiController
     {
-        #region 【変数】SlackApi実行用変数
-        /// <summary>
-        /// SlackApi実行用変数
-        /// </summary>
-        private SlackApi slackApi = new SlackApi();
-        #endregion
-
-        #region 【変数】Entity操作用変数(ChannelId)
-        /// <summary>
-        /// Entity操作用変数(ChannelId)
-        /// </summary>
-        private static EntityOperation<ChannelIdEntity> entityOperation_ChannelId = new EntityOperation<ChannelIdEntity>();
-        #endregion
-
-
         #region アクティブ操作エンドポイント
         /// <summary>
         /// アクティブ操作エンドポイント
@@ -44,8 +28,10 @@ namespace IssueApp.Controllers
         [Route("api/active")]
         public async Task Post(HttpRequestMessage request)
         {
-            string content = await request.Content.ReadAsStringAsync();
-            NameValueCollection json = HttpUtility.ParseQueryString(content);
+            // ===========================
+            // リクエストの取得・整形
+            // ===========================
+            NameValueCollection json = await GetBody(request);
 
             dynamic data = JsonConvert.DeserializeObject(json["payload"]);
 
@@ -87,7 +73,7 @@ namespace IssueApp.Controllers
         public async Task SetRepository(SlackRequest.Active<RepositoryData> data)
         {
             // 保存するトークンを入れたentityを作成
-            ChannelIdEntity entity = new ChannelIdEntity(data.Channel.Id, data.Channel.Name, data.Submission.Repository);
+            ChannelIdEntity entity = new ChannelIdEntity(data.Channel.Id, data.Channel.Name, data.Submission.UserName + "/" + data.Submission.Repository);
 
             // Entityがなければ挿入、あれば更新する
             var insertResult = entityOperation_ChannelId.InsertOrUpdateEntityResult(entity, "channel");
@@ -104,7 +90,7 @@ namespace IssueApp.Controllers
                 text = "リポジトリの登録に失敗しました";
             }
 
-            SlackModel<ButtonActionModel> model = new SlackModel<ButtonActionModel>()
+            PostMessageModel model = new PostMessageModel()
             {
                 Channel = data.Channel.Id,
                 Text = text,
@@ -124,6 +110,9 @@ namespace IssueApp.Controllers
         /// <returns></returns>
         public async Task CreateIssue(SlackRequest.Active<IssueData> data)
         {
+            // =============================
+            // Issueオブジェクト作成
+            // =============================
             NewIssue newIssue = new NewIssue(data.Submission.Title)
             {
                 Body = data.Submission.Body
@@ -136,40 +125,30 @@ namespace IssueApp.Controllers
             // =============================
             GitHubApi.SetCredential(data.User.Id);
 
-            // PartitionKeyがチャンネルIDのEntityを取得するクエリ
-            TableQuery<ChannelIdEntity> query = new TableQuery<ChannelIdEntity>()
-                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, data.Channel.Id));
-
-            // クエリ実行
-            var entityList = StorageOperation.GetTableIfNotExistsCreate("channel").ExecuteQuery(query);
-
-            SlackModel<ButtonActionModel> model = new SlackModel<ButtonActionModel>();
-
-            if (entityList.Any())
+            // =============================
+            // 登録リポジトリ取得
+            // =============================
+            await GetRepository(data.Channel.Id, data.Response_url, data.Team.Id, async (string repository) =>
             {
-                string repository = entityList.First().Repository;
-                var issue = await GitHubApi.client.Issue.Create(repository.Split('/')[0], repository.Split('/')[1], newIssue);
-
-                model = new SlackModel<ButtonActionModel>()
+                // GitHub認証エラーハンドリング
+                await AuthorizationExceptionHandler(data.Channel.Id, data.Response_url, data.Team.Id, async () =>
                 {
-                    Channel = data.Channel.Id,
-                    Text = "Issueが登録されました" + Environment.NewLine + "https://github.com/" + repository + "/issues/" + issue.Number,
-                    Response_type = "in_channel",
-                    Unfurl_links = true
-                };
-            }
-            else
-            {
-                model = new SlackModel<ButtonActionModel>()
-                {
-                    Channel = data.Channel.Id,
-                    Text = "リポジトリが登録されていません",
-                    Response_type = "ephemeral"
-                };
-            }
+                    // =============================
+                    // Issue作成
+                    // =============================
+                    var issue = await GitHubApi.client.Issue.Create(repository.Split('/')[0], repository.Split('/')[1], newIssue);
 
-            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, data.Response_url, data.Team.Id);
+                    PostMessageModel model = new PostMessageModel()
+                    {
+                        Channel = data.Channel.Id,
+                        Text = "Issueが登録されました" + Environment.NewLine + "https://github.com/" + repository + "/issues/" + issue.Number,
+                        Response_type = "in_channel",
+                        Unfurl_links = true
+                    };
 
+                    HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, data.Response_url, data.Team.Id);
+                });
+            });
         }
         #endregion
     }

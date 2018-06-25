@@ -13,6 +13,9 @@ using System.Web;
 using System.Web.Http;
 using System.Web.Http.Results;
 using System.Web.Security;
+using static IssueApp.Models.Json.PostMessageModel;
+using static IssueApp.Models.Json.PostMessageModel.Attachment;
+using static IssueApp.Common.CommonUtility;
 
 namespace IssueApp.Controllers
 {
@@ -23,13 +26,6 @@ namespace IssueApp.Controllers
         /// GitHubクライアント変数
         /// </summary>
         private GitHubClient githubClient = new GitHubClient(new ProductHeaderValue("IssueApp"));
-        #endregion
-
-        #region 【変数】SlackApi実行用変数
-        /// <summary>
-        /// SlackApi実行用変数
-        /// </summary>
-        private SlackApi slackApi = new SlackApi();
         #endregion
 
         #region 【変数】method間値渡し用変数
@@ -109,19 +105,19 @@ namespace IssueApp.Controllers
             // ==============================
             // Oauth用リダイレクトボタン作成
             // ==============================
-            SlackModel<ButtonActionModel> model = new SlackModel<ButtonActionModel>()
+            PostMessageModel model = new PostMessageModel()
             {
                 Channel = data["channel_id"],
                 Text = "GitHubへログインしてください",
                 Response_type = "ephemeral",
-                Attachments = new List<AttachmentModel<ButtonActionModel>>()
+                Attachments = new List<Attachment>()
                 {
-                    new AttachmentModel<ButtonActionModel>()
+                    new Attachment()
                     {
                         Fallback = "The GitHub Oauth URL",
-                        Actions = new List<ButtonActionModel>()
+                        Actions = new List<Action>()
                         {
-                            new ButtonActionModel()
+                            new Action()
                             {
                                 Type = "button",
                                 Name = "github_oauth_url",
