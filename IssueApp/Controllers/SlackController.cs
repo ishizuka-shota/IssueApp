@@ -1,5 +1,4 @@
-﻿using IssueApp.AzureTableStorage;
-using IssueApp.Models.Entity;
+﻿using IssueApp.Models.Entity;
 using Newtonsoft.Json;
 using System;
 using System.Configuration;
@@ -8,19 +7,12 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Http;
+using static IssueApp.Common.CommonUtility;
 
 namespace IssueApp.Controllers
 {
     public class SlackController : ApiController
     {
-        #region 【変数】Entity操作用変数(TeamId)
-        /// <summary>
-        /// Entity操作用変数(TeamId)
-        /// </summary>
-        private static EntityOperation<TeamIdEntity> entityOperation_TeamId = new EntityOperation<TeamIdEntity>();
-        #endregion
-
-
         #region Slack Oauth認証
         /// <summary>
         /// Slack Oauth認証

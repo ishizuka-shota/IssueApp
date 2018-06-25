@@ -34,36 +34,36 @@ namespace IssueApp.Models.Json
 
         [JsonProperty("elements")]
         public List<Element> Elements { get; set; }
-    }
 
-    public class Element
-    {
-        [JsonProperty("type")]
-        public string Type { get; set; }
-
-        [JsonProperty("label")]
-        public string Label { get; set; }
-
-        [JsonProperty("name")]
-        public string Name { get; set; }
-
-        [JsonProperty("options")]
-        public List<Option> Options { get; set; }
-    }
-
-    public class Option
-    {
-        [JsonProperty("label")]
-        public string Label { get; set; }
-
-        [JsonProperty("value")]
-        public string Value { get; set; }
-
-        public Option(string label, string value)
+        public class Element
         {
-            Label = label;
-            Value = value;
-        }
+            [JsonProperty("type")]
+            public string Type { get; set; }
 
+            [JsonProperty("label")]
+            public string Label { get; set; }
+
+            [JsonProperty("name")]
+            public string Name { get; set; }
+
+            [JsonProperty("options")]
+            public List<Option> Options { get; set; }
+
+            public class Option
+            {
+                [JsonProperty("label")]
+                public string Label { get; set; }
+
+                [JsonProperty("value")]
+                public string Value { get; set; }
+
+                public Option(string label, string value)
+                {
+                    Label = label;
+                    Value = value;
+                }
+
+            }
+        }
     }
 }
