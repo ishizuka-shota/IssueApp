@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using IssueApp.Models.Json.Parts;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 
 namespace IssueApp.Models.Request
@@ -10,11 +11,20 @@ namespace IssueApp.Models.Request
             [JsonProperty("type")]
             public string Type { get; set; }
 
+            [JsonProperty("actions")]
+            public List<Action> Actions { get; set; }
+
             [JsonProperty("token")]
             public string Token { get; set; }
 
             [JsonProperty("action_ts")]
             public string Action_ts { get; set; }
+
+            [JsonProperty("message_ts")]
+            public string Message_ts { get; set; }
+
+            [JsonProperty("attachment_id")]
+            public string Attachment_id { get; set; }
 
             [JsonProperty("team")]
             public Team Team { get; set; }
@@ -31,8 +41,26 @@ namespace IssueApp.Models.Request
             [JsonProperty("callback_id")]
             public string Callback_id { get; set; }
 
+            [JsonProperty("is_app_unfurl")]
+            public bool Is_app_unfurl { get; set; }
+
             [JsonProperty("response_url")]
             public string Response_url { get; set; }
+
+            [JsonProperty("trigger_id")]
+            public string Trigger_id { get; set; }
+
+            public class Action
+            {
+                [JsonProperty("name")]
+                public string Name { get; set; }
+
+                [JsonProperty("type")]
+                public string Type { get; set; }
+
+                [JsonProperty("selected_options")]
+                public List<Option> Selected_options { get; set; }
+            }
         }
   
     }
@@ -64,7 +92,7 @@ namespace IssueApp.Models.Request
         public string Name { get; set; }
     }
 
-    public class IssueData
+    public class IssueCreateData
     {
         [JsonProperty("label")]
         public string Label { get; set; }

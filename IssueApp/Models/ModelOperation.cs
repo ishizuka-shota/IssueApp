@@ -1,15 +1,18 @@
 ﻿using IssueApp.Models.Json;
+using IssueApp.Models.Json.Parts;
+using Octokit;
 using System.Collections.Generic;
 using static IssueApp.Models.Json.Dialog;
-using static IssueApp.Models.Json.Dialog.Element;
+using static IssueApp.Models.Json.PostMessageModel;
+using static IssueApp.Models.Json.PostMessageModel.Attachment;
 
 namespace IssueApp.Models
 {
     public static class ModelOperation
     {
-        #region Issue作成ダイアログ
+        #region Issue作成用ダイアログモデル作成
         /// <summary>
-        /// Issue作成ダイアログ
+        /// Issue作成用ダイアログモデル作成
         /// </summary>
         /// <param name="trigger_id"></param>
         /// <param name="labelNameList"></param>
@@ -31,8 +34,11 @@ namespace IssueApp.Models
                                 Type = "select",
                                 Label = "ラベル",
                                 Name = "label",
-                                Options = labelNameList.ConvertAll(x => new Option(x, x))
-
+                                Options = labelNameList.ConvertAll(x => new Element.Option()
+                                {
+                                    Label = x,
+                                    Value = x
+                                })
                             },
                             new Element()
                             {
@@ -81,6 +87,46 @@ namespace IssueApp.Models
                             Type = "text",
                             Label = "リポジトリ名",
                             Name = "repository"
+                        }
+                    }
+                }
+            };
+        }
+        #endregion
+
+        #region Issue閲覧用メッセージ表示モデル作成
+        /// <summary>
+        /// Issue閲覧用メッセージ表示モデル作成
+        /// </summary>
+        /// <param name="channelId"></param>
+        /// <param name="issueList"></param>
+        /// <returns></returns>
+        public static PostMessageModel CreatePostMessageModelForDisplayIssue(string channelId, List<Issue> issueList)
+        {
+            return new PostMessageModel()
+            {
+                Channel = channelId,
+                Text = "Issueの一覧を照会します。",
+                Attachments = new List<Attachment>
+                {
+                    new Attachment()
+                    {
+                        Callback_id = "displayissue",
+                        Fallback = "The Display Issue",
+                        Attachment_type = "default",
+                        Actions = new List<Action>
+                        {
+                            new Action()
+                            {
+                                Type = "select",
+                                Name = "Issue一覧",
+                                Text = "Issue一覧",
+                                Options = issueList.ConvertAll(x => new Option()
+                                {
+                                    Text = x.Title,
+                                    Value = x.Number.ToString()
+                                })
+                            }
                         }
                     }
                 }
