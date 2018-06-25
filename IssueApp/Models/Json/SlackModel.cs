@@ -4,7 +4,7 @@ using System.ComponentModel;
 
 namespace IssueApp.Models.Json
 {
-    public class SlackModel<T>
+    public class PostMessageModel<T>
     {
         [JsonProperty("text")]
         public string Text { get; set; }

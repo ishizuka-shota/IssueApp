@@ -1,29 +1,17 @@
-﻿using IssueApp.AzureTableStorage;
-using IssueApp.Models.Entity;
-using IssueApp.Models.Json;
-using IssueApp.Slack;
-using Microsoft.WindowsAzure.Storage.Table;
+﻿using IssueApp.Models.Json;
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web;
 using System.Web.Http;
+using static IssueApp.Common.CommonUtility;
+using static IssueApp.Common.RepositoryOperation;
+using static IssueApp.Models.ModelOperation;
 
 namespace IssueApp.Controllers
 {
     public class RepositoryController : ApiController
     {
-        #region 【変数】SlackApi実行用変数
-        /// <summary>
-        /// SlackApi実行用変数
-        /// </summary>
-        private SlackApi slackApi = new SlackApi();
-        #endregion
-
-
         #region リポジトリ操作エンドポイント
         /// <summary>
         /// リポジトリ操作エンドポイント
@@ -36,8 +24,7 @@ namespace IssueApp.Controllers
             // ===========================
             // リクエストの取得・整形
             // ===========================
-            string content = await request.Content.ReadAsStringAsync();
-            NameValueCollection data = HttpUtility.ParseQueryString(content);
+            NameValueCollection data = await GetBody(request);
 
             // 引数の値
             string method = data["text"];
@@ -52,32 +39,14 @@ namespace IssueApp.Controllers
                 // ===========================
                 case "set":
                     {
-                        DialogModel model = new DialogModel()
-                        {
-                            Trigger_id = data["trigger_id"],
-                            Dialog = new Dialog()
-                            {
-                                Callback_id = "setrepository",
-                                Title = "リポジトリ登録",
-                                Submit_label = "登録",
-                                Elements = new List<Element>
-                                {
-                                    new Element()
-                                    {
-                                        Type = "text",
-                                        Label = "ユーザ名",
-                                        Name = "username"
-                                    },
-                                    new Element()
-                                    {
-                                        Type = "text",
-                                        Label = "リポジトリ名",
-                                        Name = "repository"
-                                    }
-                                }
-                            }
-                        };
+                        // ====================================
+                        // リポジトリ登録用ダイアログモデル作成
+                        // ====================================
+                        DialogModel model = CreateDialogModelForSetRespotory(data["trigger_id"]);
 
+                        // =============================
+                        // ダイアログAPI実行
+                        // =============================
                         HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/dialog.open", data["team_id"]);
                         break;
                     }
@@ -86,34 +55,17 @@ namespace IssueApp.Controllers
                 // ===========================
                 case "get":
                     {
-                        // PartitionKeyがチャンネルIDのEntityを取得するクエリ
-                        TableQuery<ChannelIdEntity> query = new TableQuery<ChannelIdEntity>()
-                            .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, data["channel_id"]));
-
-                        // クエリ実行
-                        var entityList = StorageOperation.GetTableIfNotExistsCreate("channel").ExecuteQuery(query);
-
-                        string text = string.Empty;
-
-                        // クエリ実行結果で要素がひとつでもあるかどうか
-                        if (entityList.Any())
+                        await GetRepository(data["channel_id"], data["response_url"], data["team_id"], async (string repository) =>
                         {
-                            string repository = entityList.First().Repository;
-                            text = "登録リポジトリのURLを照会します" + Environment.NewLine + "https://github.com/" + repository;
-                        }
-                        else
-                        {
-                            text = "登録リポジトリは存在しません";
-                        }
+                            PostMessageModel model = new PostMessageModel()
+                            {
+                                Channel = data["channel_id"],
+                                Text = "登録リポジトリのURLを照会します" + Environment.NewLine + "https://github.com/" + repository,
+                                Response_type = "ephemeral"
+                            };
 
-                        SlackModel<ButtonActionModel> model = new SlackModel<ButtonActionModel>()
-                        {
-                            Channel = data["channel_id"],
-                            Text = text,
-                            Response_type = "ephemeral"
-                        };
-
-                        HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, data["response_url"], data["team_id"]);
+                            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, data["response_url"], data["team_id"]);
+                        });
                         break;
                     }
                 // ===========================
@@ -121,7 +73,7 @@ namespace IssueApp.Controllers
                 // ===========================
                 default:
                     {
-                        SlackModel<ButtonActionModel> model = new SlackModel<ButtonActionModel>()
+                        PostMessageModel model = new PostMessageModel()
                         {
                             Channel = data["channel_id"],
                             Text = "引数を入力してください",

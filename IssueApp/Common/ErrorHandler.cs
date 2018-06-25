@@ -8,13 +8,16 @@ using System.Threading.Tasks;
 
 namespace IssueApp.Common
 {
-    public class ErrorHandler
+    /// <summary>
+    /// エラーハンドリング用クラス
+    /// </summary>
+    public static class ErrorHandler
     {
         #region 【変数】SlackApi実行用変数
         /// <summary>
         /// SlackApi実行用変数
         /// </summary>
-        private SlackApi slackApi = new SlackApi();
+        private static SlackApi slackApi = new SlackApi();
         #endregion
 
         #region 【デリゲート】処理
@@ -31,7 +34,7 @@ namespace IssueApp.Common
         /// </summary>
         /// <param name="cancel"></param>
         /// <returns></returns>
-        public async Task Handler(NameValueCollection data, Canceler cancel)
+        public static async Task Handler(NameValueCollection data, Canceler cancel)
         {
             try
             {
@@ -46,7 +49,7 @@ namespace IssueApp.Common
             //ユーザ情報不正時の処理
             catch (AuthorizationException)
             {
-                SlackModel<ButtonActionModel> model = new SlackModel<ButtonActionModel>()
+                PostMessageModel model = new PostMessageModel()
                 {
                     Channel = data["channel_id"],
                     Text = "ユーザ情報が不正、もしくは存在しません。",
@@ -58,7 +61,7 @@ namespace IssueApp.Common
             //それ以外の例外処理
             catch (Exception)
             {
-                SlackModel<ButtonActionModel> model = new SlackModel<ButtonActionModel>()
+                PostMessageModel model = new PostMessageModel()
                 {
                     Channel = data["channel_id"],
                     Text = "予期せぬエラーが発生しました。",
@@ -76,7 +79,7 @@ namespace IssueApp.Common
         /// </summary>
         /// <param name="func"></param>
         /// <returns></returns>
-        public async Task AuthorizationExceptionHandler(string channelId, string response_url, string teamId, Func<Task> func)
+        public static async Task AuthorizationExceptionHandler(string channelId, string response_url, string teamId, Func<Task> func)
         {
             try
             {
@@ -84,7 +87,7 @@ namespace IssueApp.Common
             }
             catch (AuthorizationException)
             {
-                SlackModel<ButtonActionModel> model = new SlackModel<ButtonActionModel>()
+                PostMessageModel model = new PostMessageModel()
                 {
                     Channel = channelId,
                     Text = "ユーザ情報が不正、もしくは存在しません。",
