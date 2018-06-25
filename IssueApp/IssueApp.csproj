@@ -198,23 +198,16 @@
     <Compile Include="Controllers\IssueController.cs" />
     <Compile Include="Controllers\RepositoryController.cs" />
     <Compile Include="Controllers\SlackController.cs" />
-    <Compile Include="Controllers\ValuesController.cs" />
     <Compile Include="GitHub\GitHubApi.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Models\Constants\Slack.cs" />
     <Compile Include="Models\Entity\ChannelIdEntity.cs" />
     <Compile Include="Models\Entity\TeamIdEntity.cs" />
     <Compile Include="Models\Entity\TemplateEntity.cs" />
     <Compile Include="Models\Entity\UserEntity.cs" />
-    <Compile Include="Models\Json\AttachmentModel.cs" />
-    <Compile Include="Models\Json\ButtonActionModel.cs" />
     <Compile Include="Models\Json\DialogModel.cs" />
-    <Compile Include="Models\Json\MenuActionModel.cs" />
-    <Compile Include="Models\Json\OptionModel.cs" />
     <Compile Include="Models\Json\PostMessageModel.cs" />
-    <Compile Include="Models\Json\SlackModel.cs" />
     <Compile Include="Models\ModelOperation.cs" />
     <Compile Include="Models\Request\SlackRequest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -13,7 +13,6 @@ namespace IssueApp.Slack
 {
     public class SlackApi
     {
-        internal static object slackApi;
         #region Json送信Api実行(post)
         /// <summary>
         /// Api実行(post)
