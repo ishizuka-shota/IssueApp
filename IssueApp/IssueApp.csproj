@@ -207,9 +207,7 @@
     <Compile Include="Models\Entity\TemplateEntity.cs" />
     <Compile Include="Models\Entity\UserEntity.cs" />
     <Compile Include="Models\Json\DialogModel.cs" />
-    <Compile Include="Models\Json\Parts\Option.cs" />
     <Compile Include="Models\Json\PostMessageModel.cs" />
-    <Compile Include="Models\Json\UpdateModel.cs" />
     <Compile Include="Models\ModelOperation.cs" />
     <Compile Include="Models\Request\SlackRequest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -1,5 +1,4 @@
-﻿using IssueApp.Models.Json.Parts;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.ComponentModel;
 
@@ -49,6 +48,22 @@ namespace IssueApp.Models.Json
 
             [JsonProperty("options")]
             public List<Option> Options { get; set; }
+
+            public class Option
+            {
+                [JsonProperty("label")]
+                public string Label { get; set; }
+
+                [JsonProperty("value")]
+                public string Value { get; set; }
+
+                public Option(string label, string value)
+                {
+                    Label = label;
+                    Value = value;
+                }
+
+            }
         }
     }
 }

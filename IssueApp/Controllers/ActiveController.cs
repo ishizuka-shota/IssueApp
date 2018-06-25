@@ -5,9 +5,7 @@ using IssueApp.Models.Request;
 using Newtonsoft.Json;
 using Octokit;
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -52,14 +50,8 @@ namespace IssueApp.Controllers
                     }
                 case "createissue":
                     {
-                        var req = JsonConvert.DeserializeObject<SlackRequest.Active<IssueCreateData>>(json["payload"]);
+                        var req = JsonConvert.DeserializeObject<SlackRequest.Active<IssueData>>(json["payload"]);
                         await CreateIssue(req);
-                        break;
-                    }
-                case "displayissue":
-                    {
-                        var req = JsonConvert.DeserializeObject<SlackRequest.Active<Issue>>(json["payload"]);
-                        await DisplayIssue(req);
                         break;
                     }
                 default:
@@ -116,7 +108,7 @@ namespace IssueApp.Controllers
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        public async Task CreateIssue(SlackRequest.Active<IssueCreateData> data)
+        public async Task CreateIssue(SlackRequest.Active<IssueData> data)
         {
             // =============================
             // Issueオブジェクト作成
@@ -157,43 +149,6 @@ namespace IssueApp.Controllers
                     HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, data.Response_url, data.Team.Id);
                 });
             });
-        }
-        #endregion
-
-        #region Issue閲覧
-        /// <summary>
-        /// Issue閲覧
-        /// </summary>
-        /// <returns></returns>
-        public async Task DisplayIssue(SlackRequest.Active<Issue> data)
-        {
-            Issue issue = null;
-
-            // =============================
-            // 登録リポジトリ取得
-            // =============================
-            await GetRepository(data.Channel.Id, data.Response_url, data.Team.Id, async (string repository) =>
-            {
-                // GitHub認証エラーハンドリング
-                await AuthorizationExceptionHandler(data.Channel.Id, data.Response_url, data.Team.Id, async () =>
-                {
-                    issue = await GitHubApi.client.Issue.Get(repository.Split('/')[0], repository.Split('/')[1], int.Parse(data.Actions.First().Selected_options.First().Value));
-                });
-            });
-
-            UpdateModel model = new UpdateModel()
-            {
-                Channel = data.Channel.Id,
-                Ts = data.Message_ts,
-                Attachments = new List<PostMessageModel.Attachment>
-                {
-                    new PostMessageModel.Attachment()
-                    {
-
-                    }
-                }
-            };
-
         }
         #endregion
     }
