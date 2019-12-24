@@ -27,24 +27,24 @@ namespace IssueApp.Controllers
             // ==============================
             // アクセストークン発行
             // ==============================
-            HttpClient client = new HttpClient();
+            var client = new HttpClient();
 
             var query = HttpUtility.ParseQueryString(string.Empty);
             query["client_id"] = ConfigurationManager.AppSettings["slackapp_client_id"];
             query["client_secret"] = ConfigurationManager.AppSettings["slackapp_client_secret"];
             query["code"] = code;
 
-            UriBuilder builder = new UriBuilder(new Uri("https://slack.com/api/oauth.access"))
+            var builder = new UriBuilder(new Uri("https://slack.com/api/oauth.access"))
             {
                 Query = query.ToString()
             };
 
-            HttpResponseMessage response = await client.GetAsync(builder.Uri.ToString());
+            var response = await client.GetAsync(builder.Uri.ToString());
 
             // ================================
             // アクセストークンをStorageに保存
             // ================================
-            string content = await response.Content.ReadAsStringAsync();
+            var content = await response.Content.ReadAsStringAsync();
             dynamic data = JsonConvert.DeserializeObject(content);
 
             string teamId = data["team_id"];
@@ -52,10 +52,10 @@ namespace IssueApp.Controllers
             string token = data["bot"]["bot_access_token"];
 
             // 保存するトークンを入れたentityを作成
-            TeamIdEntity entity = new TeamIdEntity(teamId, teamName, token);
+            var entity = new TeamIdEntity(teamId, teamName, token);
 
             // Entityがなければ挿入、あれば更新する
-            var insertResult = entityOperation_TeamId.InsertOrUpdateEntityResult(entity, "team");
+            var insertResult = EntityOperationTeamId.InsertOrUpdateEntityResult(entity, "team");
 
             // 結果があるかどうか
             if (insertResult != null)
@@ -67,15 +67,13 @@ namespace IssueApp.Controllers
                     Content = new StringContent("SlackのOauth認証に成功しました")
                 };
             }
-            else
+
+            // なければ認証失敗
+            return new HttpResponseMessage()
             {
-                // なければ認証失敗
-                return new HttpResponseMessage()
-                {
-                    StatusCode = HttpStatusCode.BadRequest,
-                    Content = new StringContent("SlackのOauth認証に失敗しました")
-                };
-            }
+                StatusCode = HttpStatusCode.BadRequest,
+                Content = new StringContent("SlackのOauth認証に失敗しました")
+            };
         }
         #endregion
     }

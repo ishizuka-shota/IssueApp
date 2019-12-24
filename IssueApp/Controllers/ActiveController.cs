@@ -73,12 +73,12 @@ namespace IssueApp.Controllers
         public async Task SetRepository(SlackRequest.Active<RepositoryData> data)
         {
             // 保存するトークンを入れたentityを作成
-            ChannelIdEntity entity = new ChannelIdEntity(data.Channel.Id, data.Channel.Name, data.Submission.UserName + "/" + data.Submission.Repository);
+            var entity = new ChannelIdEntity(data.Channel.Id, data.Channel.Name, data.Submission.UserName + "/" + data.Submission.Repository);
 
             // Entityがなければ挿入、あれば更新する
-            var insertResult = entityOperation_ChannelId.InsertOrUpdateEntityResult(entity, "channel");
+            var insertResult = EntityOperationChannelId.InsertOrUpdateEntityResult(entity, "channel");
 
-            string text = string.Empty;
+            string text;
 
             // 結果があるかどうか
             if (insertResult != null)
@@ -90,7 +90,7 @@ namespace IssueApp.Controllers
                 text = "リポジトリの登録に失敗しました";
             }
 
-            PostMessageModel model = new PostMessageModel()
+            var model = new PostMessageModel()
             {
                 Channel = data.Channel.Id,
                 Text = text,
@@ -98,7 +98,7 @@ namespace IssueApp.Controllers
                 Unfurl_links = true
             };
 
-            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/chat.postMessage", data.Team.Id);
+            await SlackApi.ExecutePostApiAsJson(model, "https://slack.com/api/chat.postMessage", data.Team.Id);
         }
         #endregion
 
@@ -113,7 +113,7 @@ namespace IssueApp.Controllers
             // =============================
             // Issueオブジェクト作成
             // =============================
-            NewIssue newIssue = new NewIssue(data.Submission.Title)
+            var newIssue = new NewIssue(data.Submission.Title)
             {
                 Body = data.Submission.Body
             };
@@ -128,7 +128,7 @@ namespace IssueApp.Controllers
             // =============================
             // 登録リポジトリ取得
             // =============================
-            await GetRepository(data.Channel.Id, data.Response_url, data.Team.Id, async (string repository) =>
+            await GetRepository(data.Channel.Id, data.Response_url, data.Team.Id, async repository =>
             {
                 // GitHub認証エラーハンドリング
                 await AuthorizationExceptionHandler(data.Channel.Id, data.Response_url, data.Team.Id, async () =>
@@ -136,7 +136,7 @@ namespace IssueApp.Controllers
                     // =============================
                     // Issue作成
                     // =============================
-                    var issue = await GitHubApi.client.Issue.Create(repository.Split('/')[0], repository.Split('/')[1], newIssue);
+                    var issue = await GitHubApi.Client.Issue.Create(repository.Split('/')[0], repository.Split('/')[1], newIssue);
 
                     PostMessageModel model = new PostMessageModel()
                     {
@@ -146,7 +146,7 @@ namespace IssueApp.Controllers
                         Unfurl_links = true
                     };
 
-                    HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, data.Response_url, data.Team.Id);
+                    await SlackApi.ExecutePostApiAsJson(model, data.Response_url, data.Team.Id);
                 });
             });
         }

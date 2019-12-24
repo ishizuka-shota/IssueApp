@@ -1,7 +1,6 @@
 ﻿using IssueApp.GitHub;
 using IssueApp.Models.Json;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -28,7 +27,7 @@ namespace IssueApp.Controllers
             // ===========================
             // リクエストの取得・整形
             // ===========================
-            NameValueCollection data = await GetBody(request);
+            var data = await GetBody(request);
 
             // =============================
             // GitHubアクセストークンの設定
@@ -39,7 +38,7 @@ namespace IssueApp.Controllers
             // 登録リポジトリ照会
             // =============================
 
-            await GetRepository(data["channel_id"], data["response_url"], data["team_id"], async (string repository) =>
+            await GetRepository(data["channel_id"], data["response_url"], data["team_id"], async repository =>
             {
                 List<string> labelNameList = null;
 
@@ -47,7 +46,7 @@ namespace IssueApp.Controllers
                 await AuthorizationExceptionHandler(data["channel_id"], data["response_url"], data["team_id"], async () =>
                 {
                     // クライアントを用いてリポジトリ名からIssueのラベルを取得
-                    var labelList = await GitHubApi.client.Issue.Labels.GetAllForRepository(repository.Split('/')[0], repository.Split('/')[1]);
+                    var labelList = await GitHubApi.Client.Issue.Labels.GetAllForRepository(repository.Split('/')[0], repository.Split('/')[1]);
 
                     // ラベル変数リストを文字列リストに変換
                     labelNameList = labelList.ToList().ConvertAll(x => x.Name);
@@ -61,7 +60,7 @@ namespace IssueApp.Controllers
                 // =============================
                 // ダイアログAPI実行
                 // =============================
-                HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/dialog.open", data["team_id"]);
+                await SlackApi.ExecutePostApiAsJson(model, "https://slack.com/api/dialog.open", data["team_id"]);
             });
 
            

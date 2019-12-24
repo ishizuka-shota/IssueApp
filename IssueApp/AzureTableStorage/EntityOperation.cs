@@ -2,18 +2,18 @@
 
 namespace IssueApp.AzureTableStorage
 {
-    public class EntityOperation<E> where E : TableEntity
+    public class EntityOperation<TE> where TE : TableEntity
     {
         #region Entity挿入
+
         /// <summary>
         /// Entity挿入
         /// </summary>
-        /// <param name="label"></param>
         /// <returns></returns>
-        public TableResult InsertEntityResult(E entity, string tableName)
+        public TableResult InsertEntityResult(TE entity, string tableName)
         {
             //エンティティを用いて挿入用命令を作成
-            TableOperation insertOperation = TableOperation.Insert(entity);
+            var insertOperation = TableOperation.Insert(entity);
 
             //指定テーブルに挿入命令を実行し、結果を返す
             return StorageOperation.GetTableIfNotExistsCreate(tableName).Execute(insertOperation);
@@ -22,27 +22,23 @@ namespace IssueApp.AzureTableStorage
         #endregion
 
         #region Entity検索
+
         /// <summary>
         /// Entity検索
         /// </summary>
-        /// <param name="label"></param>
+        /// <param name="partitionKey"></param>
+        /// <param name="rowKey"></param>
+        /// <param name="tableName"></param>
         /// <returns></returns>
-        public E RetrieveEntity(string partitionKey, string rowKey, string tableName)
+        public TE RetrieveEntity(string partitionKey, string rowKey, string tableName)
         {
             //検索操作を行う変数を生成
-            TableOperation retrieveOperation = TableOperation.Retrieve<E>(partitionKey, rowKey);
+            var retrieveOperation = TableOperation.Retrieve<TE>(partitionKey, rowKey);
 
             //テーブルに対して検索操作を行い、結果を返す
-            TableResult result = StorageOperation.GetTableIfNotExistsCreate(tableName).Execute(retrieveOperation);
+            var result = StorageOperation.GetTableIfNotExistsCreate(tableName).Execute(retrieveOperation);
 
-            if (result != null)
-            {
-                return result.Result as E;
-            }
-            else
-            {
-                return null;
-            }
+            return result?.Result as TE;
         }
         #endregion
 
@@ -51,10 +47,10 @@ namespace IssueApp.AzureTableStorage
         /// Entity更新
         /// </summary>
         /// <returns></returns>
-        public TableResult UpdateEntityResult(E entity, string tableName)
+        public TableResult UpdateEntityResult(TE entity, string tableName)
         {
             //アップデート対象のエンティティを取得
-            E updateEntity = RetrieveEntity(entity.PartitionKey, entity.RowKey, tableName);
+            var updateEntity = RetrieveEntity(entity.PartitionKey, entity.RowKey, tableName);
 
             //アップデート対象のエンティティを指定
             entity.PartitionKey = updateEntity.PartitionKey;
@@ -62,7 +58,7 @@ namespace IssueApp.AzureTableStorage
             entity.ETag = updateEntity.ETag;
 
             //更新操作を行う変数を生成
-            TableOperation replaceOperation = TableOperation.Replace(entity);
+            var replaceOperation = TableOperation.Replace(entity);
 
             //テーブルに対して更新操作を行い、結果を返す
             return StorageOperation.GetTableIfNotExistsCreate(tableName).Execute(replaceOperation);
@@ -74,7 +70,7 @@ namespace IssueApp.AzureTableStorage
         /// Entity挿入か更新
         /// </summary>
         /// <returns></returns>
-        public TableResult InsertOrUpdateEntityResult(E entity, string tableName)
+        public TableResult InsertOrUpdateEntityResult(TE entity, string tableName)
         {
             //挿入or更新操作を行う変数を生成
             TableOperation insertOrReplaceOperation = TableOperation.InsertOrReplace(entity);

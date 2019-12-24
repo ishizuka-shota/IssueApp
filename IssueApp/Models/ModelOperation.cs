@@ -11,14 +11,14 @@ namespace IssueApp.Models
         /// <summary>
         /// Issue作成ダイアログ
         /// </summary>
-        /// <param name="trigger_id"></param>
+        /// <param name="triggerId"></param>
         /// <param name="labelNameList"></param>
         /// <returns></returns>
-        public static DialogModel CreateDialogModelForCreateIssue(string trigger_id, List<string> labelNameList)
+        public static DialogModel CreateDialogModelForCreateIssue(string triggerId, List<string> labelNameList)
         {
             return new DialogModel()
             {
-                Trigger_id = trigger_id,
+                Trigger_id = triggerId,
                 Dialog = new Dialog()
                 {
                     Callback_id = "createissue",
@@ -56,13 +56,13 @@ namespace IssueApp.Models
         /// <summary>
         /// リポジトリ登録用ダイアログモデル作成
         /// </summary>
-        /// <param name="trigger_id"></param>
+        /// <param name="triggerId"></param>
         /// <returns></returns>
-        public static DialogModel CreateDialogModelForSetRespotory(string trigger_id)
+        public static DialogModel CreateDialogModelForSetRespotory(string triggerId)
         {
             return new DialogModel()
             {
-                Trigger_id = trigger_id,
+                Trigger_id = triggerId,
                 Dialog = new Dialog()
                 {
                     Callback_id = "setrepository",

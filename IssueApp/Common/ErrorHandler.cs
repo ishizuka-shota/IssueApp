@@ -3,7 +3,6 @@ using IssueApp.Slack;
 using Octokit;
 using System;
 using System.Collections.Specialized;
-using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace IssueApp.Common
@@ -17,7 +16,7 @@ namespace IssueApp.Common
         /// <summary>
         /// SlackApi実行用変数
         /// </summary>
-        private static SlackApi slackApi = new SlackApi();
+        private static readonly SlackApi SlackApi = new SlackApi();
         #endregion
 
         #region 【デリゲート】処理
@@ -29,9 +28,11 @@ namespace IssueApp.Common
         #endregion
 
         #region エラーハンドラー
+
         /// <summary>
         /// エラーハンドラー
         /// </summary>
+        /// <param name="data"></param>
         /// <param name="cancel"></param>
         /// <returns></returns>
         public static async Task Handler(NameValueCollection data, Canceler cancel)
@@ -49,37 +50,41 @@ namespace IssueApp.Common
             //ユーザ情報不正時の処理
             catch (AuthorizationException)
             {
-                PostMessageModel model = new PostMessageModel()
+                var model = new PostMessageModel()
                 {
                     Channel = data["channel_id"],
                     Text = "ユーザ情報が不正、もしくは存在しません。",
                     Response_type = "ephemeral"
                 };
 
-                HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, data["response_url"], data["team_id"]);
+                await SlackApi.ExecutePostApiAsJson(model, data["response_url"], data["team_id"]);
             }
             //それ以外の例外処理
             catch (Exception)
             {
-                PostMessageModel model = new PostMessageModel()
+                var model = new PostMessageModel()
                 {
                     Channel = data["channel_id"],
                     Text = "予期せぬエラーが発生しました。",
                     Response_type = "ephemeral"
                 };
 
-                HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, data["response_url"], data["team_id"]);
+                await SlackApi.ExecutePostApiAsJson(model, data["response_url"], data["team_id"]);
             }
         }
         #endregion
 
         #region GitHubユーザ認証エラーハンドリング
+
         /// <summary>
         /// GitHubユーザ認証エラーハンドリング
         /// </summary>
+        /// <param name="teamId"></param>
         /// <param name="func"></param>
+        /// <param name="channelId"></param>
+        /// <param name="responseUrl"></param>
         /// <returns></returns>
-        public static async Task AuthorizationExceptionHandler(string channelId, string response_url, string teamId, Func<Task> func)
+        public static async Task AuthorizationExceptionHandler(string channelId, string responseUrl, string teamId, Func<Task> func)
         {
             try
             {
@@ -94,7 +99,7 @@ namespace IssueApp.Common
                     Response_type = "ephemeral"
                 };
 
-                HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, response_url, teamId);
+                await SlackApi.ExecutePostApiAsJson(model, responseUrl, teamId);
             }
         }
         #endregion

@@ -27,7 +27,7 @@ namespace IssueApp.Controllers
             NameValueCollection data = await GetBody(request);
 
             // 引数の値
-            string method = data["text"];
+            var method = data["text"];
 
             // ===========================
             // 引数の値で処理を分ける
@@ -42,12 +42,12 @@ namespace IssueApp.Controllers
                         // ====================================
                         // リポジトリ登録用ダイアログモデル作成
                         // ====================================
-                        DialogModel model = CreateDialogModelForSetRespotory(data["trigger_id"]);
+                        var model = CreateDialogModelForSetRespotory(data["trigger_id"]);
 
                         // =============================
                         // ダイアログAPI実行
                         // =============================
-                        HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, "https://slack.com/api/dialog.open", data["team_id"]);
+                        await SlackApi.ExecutePostApiAsJson(model, "https://slack.com/api/dialog.open", data["team_id"]);
                         break;
                     }
                 // ===========================
@@ -55,7 +55,7 @@ namespace IssueApp.Controllers
                 // ===========================
                 case "get":
                     {
-                        await GetRepository(data["channel_id"], data["response_url"], data["team_id"], async (string repository) =>
+                        await GetRepository(data["channel_id"], data["response_url"], data["team_id"], async repository =>
                         {
                             PostMessageModel model = new PostMessageModel()
                             {
@@ -64,7 +64,7 @@ namespace IssueApp.Controllers
                                 Response_type = "ephemeral"
                             };
 
-                            HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, data["response_url"], data["team_id"]);
+                            await SlackApi.ExecutePostApiAsJson(model, data["response_url"], data["team_id"]);
                         });
                         break;
                     }
@@ -73,14 +73,14 @@ namespace IssueApp.Controllers
                 // ===========================
                 default:
                     {
-                        PostMessageModel model = new PostMessageModel()
+                        var model = new PostMessageModel()
                         {
                             Channel = data["channel_id"],
                             Text = "引数を入力してください",
                             Response_type = "ephemeral"
                         };
 
-                        HttpResponseMessage response = await slackApi.ExecutePostApiAsJson(model, data["response_url"], data["team_id"]);
+                        await SlackApi.ExecutePostApiAsJson(model, data["response_url"], data["team_id"]);
 
                         break;
                     }

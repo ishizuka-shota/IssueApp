@@ -12,7 +12,7 @@ namespace IssueApp.GitHub
         /// <summary>
         /// GitHubクライアント
         /// </summary>
-        public static GitHubClient client = new GitHubClient(new ProductHeaderValue("IssueApp"));
+        public static GitHubClient Client = new GitHubClient(new ProductHeaderValue("IssueApp"));
         #endregion
 
 
@@ -20,26 +20,19 @@ namespace IssueApp.GitHub
         /// <summary>
         /// GitHubアクセストークンセット
         /// </summary>
-        /// <param name="slack_userId"></param>
-        public static void SetCredential(string slack_userId)
+        /// <param name="slackUserId"></param>
+        public static void SetCredential(string slackUserId)
         {
             // PartitionKeyがSlackユーザIDのEntityを取得するクエリ
             TableQuery<UserEntity> query = new TableQuery<UserEntity>()
-                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, slack_userId));
+                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, slackUserId));
 
             // クエリ実行
             var entityList = StorageOperation.GetTableIfNotExistsCreate("user").ExecuteQuery(query);
 
             // クエリ実行結果で要素がひとつでもあるかどうか
-            if (entityList.Any())
-            {
-                client.Credentials = new Credentials(entityList.First().AccessToken);
-            }
-            else
-            {
-                // クレデンシャル情報に適当な値を入れ、認証エラーが起きるようにする
-                client.Credentials = new Credentials("aaaaaaaaaaaaaa");
-            }
+            var userEntities = entityList.ToList();
+            Client.Credentials = userEntities.Any() ? new Credentials(userEntities.First().AccessToken) : new Credentials("aaaaaaaaaaaaaa");
         }
         #endregion
 

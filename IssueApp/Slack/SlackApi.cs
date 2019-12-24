@@ -14,27 +14,29 @@ namespace IssueApp.Slack
     public class SlackApi
     {
         #region Json送信Api実行(post)
+
         /// <summary>
         /// Api実行(post)
         /// </summary>
-        /// <param name="slackModel"></param>
+        /// <param name="model"></param>
         /// <param name="apiUri"></param>
+        /// <param name="teamId"></param>
         /// <returns></returns>
         public async Task<HttpResponseMessage> ExecutePostApiAsJson(object model, string apiUri, string teamId)
         {
-            using (HttpClient client = CreateHeaderAsJson(teamId))
+            using (var client = CreateHeaderAsJson(teamId))
             {
                 // モデルからJson作成
-                string json = JsonConvert.SerializeObject(model, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
+                var json = JsonConvert.SerializeObject(model, new JsonSerializerSettings() { NullValueHandling = NullValueHandling.Ignore });
 
                 // リクエスト作成
-                HttpRequestMessage httpRequest = new HttpRequestMessage(HttpMethod.Post, apiUri)
+                var httpRequest = new HttpRequestMessage(HttpMethod.Post, apiUri)
                 {
                     Content = new StringContent(json, Encoding.UTF8, "application/json")
                 };
 
                 // API実行
-                HttpResponseMessage response =  await client.SendAsync(httpRequest);
+                var response =  await client.SendAsync(httpRequest);
 
                 return response;
             }
@@ -49,28 +51,27 @@ namespace IssueApp.Slack
         public HttpClient CreateHeaderAsJson(string teamId)
         {
             // PartitionKeyがチームIDのEntityを取得するクエリ
-            TableQuery<TeamIdEntity> query = new TableQuery<TeamIdEntity>()
+            var query = new TableQuery<TeamIdEntity>()
                 .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, teamId));
 
             var entityList = StorageOperation.GetTableIfNotExistsCreate("team").ExecuteQuery(query);
 
             // クエリ実行結果で要素がひとつでもあるかどうか
-            if (entityList.Any())
+            var teamIdEntities = entityList.ToList();
+            if (teamIdEntities.Any())
             {
                 // クライアント作成
-                HttpClient client = new HttpClient();
+                var client = new HttpClient();
 
                 // ヘッダー情報挿入
                 client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 client.DefaultRequestHeaders.Authorization = 
-                    new AuthenticationHeaderValue("Bearer", entityList.First().Token);
+                    new AuthenticationHeaderValue("Bearer", teamIdEntities.First().Token);
 
                 return client;
             }
-            else
-            {
-                throw new Exception();
-            }
+
+            throw new Exception();
         }
         #endregion
     }
