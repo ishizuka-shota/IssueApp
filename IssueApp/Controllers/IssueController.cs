@@ -15,6 +15,7 @@ namespace IssueApp.Controllers
     public class IssueController : ApiController
     {
         #region Issue作成エンドポイント
+
         /// <summary>
         /// Issue作成エンドポイント
         /// </summary>
@@ -29,43 +30,79 @@ namespace IssueApp.Controllers
             // ===========================
             var data = await GetBody(request);
 
-            // =============================
-            // GitHubアクセストークンの設定
-            // =============================
-            GitHubApi.SetCredential(data["user_id"]);
+            // 引数の値
+            var method = data["text"];
 
-            // =============================
-            // 登録リポジトリ照会
-            // =============================
 
-            await GetRepository(data["channel_id"], data["response_url"], data["team_id"], async repository =>
+            // ===========================
+            // 引数の値で処理を分ける
+            // ===========================
+            switch (method)
             {
-                List<string> labelNameList = null;
-
-                // GitHub認証エラーハンドリング
-                await AuthorizationExceptionHandler(data["channel_id"], data["response_url"], data["team_id"], async () =>
+                // ===========================
+                // issue登録
+                // ===========================
+                case "set":
                 {
-                    // クライアントを用いてリポジトリ名からIssueのラベルを取得
-                    var labelList = await GitHubApi.Client.Issue.Labels.GetAllForRepository(repository.Split('/')[0], repository.Split('/')[1]);
+                    // =============================
+                    // GitHubアクセストークンの設定
+                    // =============================
+                    GitHubApi.SetCredential(data["user_id"]);
 
-                    // ラベル変数リストを文字列リストに変換
-                    labelNameList = labelList.ToList().ConvertAll(x => x.Name);
-                });
+                    // =============================
+                    // 登録リポジトリ照会
+                    // =============================
 
-                // ===============================
-                // Issue作成用ダイアログモデル作成
-                // ===============================
-                DialogModel model = CreateDialogModelForCreateIssue(data["trigger_id"], labelNameList);
+                    await GetRepository(data["channel_id"], data["response_url"], data["team_id"], async repository =>
+                    {
+                        List<string> labelNameList = null;
 
-                // =============================
-                // ダイアログAPI実行
-                // =============================
-                await SlackApi.ExecutePostApiAsJson(model, "https://slack.com/api/dialog.open", data["team_id"]);
-            });
+                        // GitHub認証エラーハンドリング
+                        await AuthorizationExceptionHandler(data["channel_id"], data["response_url"], data["team_id"],
+                            async () =>
+                            {
+                                // クライアントを用いてリポジトリ名からIssueのラベルを取得
+                                var labelList =
+                                    await GitHubApi.Client.Issue.Labels.GetAllForRepository(repository.Split('/')[0],
+                                        repository.Split('/')[1]);
 
-           
+                                // ラベル変数リストを文字列リストに変換
+                                labelNameList = labelList.ToList().ConvertAll(x => x.Name);
+                            });
+
+                        // ===============================
+                        // Issue作成用ダイアログモデル作成
+                        // ===============================
+                        DialogModel model = CreateDialogModelForCreateIssue(data["trigger_id"], labelNameList);
+
+                        // =============================
+                        // ダイアログAPI実行
+                        // =============================
+                        await SlackApi.ExecutePostApiAsJson(model, "https://slack.com/api/dialog.open",
+                            data["team_id"]);
+                    });
+                    break;
+                }
+                // ===========================
+                // それ以外
+                // ===========================
+                default:
+                {
+                    var model = new PostMessageModel()
+                    {
+                        Channel = data["channel_id"],
+                        Text = "引数を入力してください",
+                        Response_type = "ephemeral"
+                    };
+
+                    await SlackApi.ExecutePostApiAsJson(model, data["response_url"], data["team_id"]);
+
+                    break;
+                }
+
+            }
+
+            #endregion
         }
-        #endregion
-
     }
 }

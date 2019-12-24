@@ -57,7 +57,7 @@ namespace IssueApp.Controllers
                     {
                         await GetRepository(data["channel_id"], data["response_url"], data["team_id"], async repository =>
                         {
-                            PostMessageModel model = new PostMessageModel()
+                            var model = new PostMessageModel()
                             {
                                 Channel = data["channel_id"],
                                 Text = "登録リポジトリのURLを照会します" + Environment.NewLine + "https://github.com/" + repository,
