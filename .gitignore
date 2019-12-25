@@ -261,4 +261,5 @@ __pycache__/
 *.pyc
 
 # local creadencial ignore
-Web.local.config
+/AppSettings.config
+/Connection.config

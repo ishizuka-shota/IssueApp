@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
+using Octokit;
 using static IssueApp.Common.CommonUtility;
 using static IssueApp.Common.ErrorHandler;
 using static IssueApp.Common.RepositoryOperation;
@@ -42,7 +43,7 @@ namespace IssueApp.Controllers
                 // ===========================
                 // issue登録
                 // ===========================
-                case "set":
+                case "create":
                 {
                     // =============================
                     // GitHubアクセストークンの設定
@@ -73,7 +74,7 @@ namespace IssueApp.Controllers
                         // ===============================
                         // Issue作成用ダイアログモデル作成
                         // ===============================
-                        DialogModel model = CreateDialogModelForCreateIssue(data["trigger_id"], labelNameList);
+                        var model = CreateDialogModelForCreateIssue(data["trigger_id"], labelNameList);
 
                         // =============================
                         // ダイアログAPI実行
@@ -81,6 +82,29 @@ namespace IssueApp.Controllers
                         await SlackApi.ExecutePostApiAsJson(model, "https://slack.com/api/dialog.open",
                             data["team_id"]);
                     });
+                    break;
+                }
+                case "export":
+                {
+                    List<Issue> issueList = null;
+
+                    // =============================
+                    // 登録リポジトリ照会
+                    // =============================
+                    await GetRepository(data["channel_id"], data["response_url"], data["team_id"], async repository =>
+                    {
+                        // GitHub認証エラーハンドリング
+                        await AuthorizationExceptionHandler(data["channel_id"], data["response_url"], data["team_id"],
+                            async () =>
+                            {
+                                var issueROList = await GitHubApi.Client.Issue.GetAllForRepository(
+                                    repository.Split('/')[0],
+                                    repository.Split('/')[1]);
+                                issueList = issueROList.ToList();
+                            });
+                    });
+
+
                     break;
                 }
                 // ===========================
