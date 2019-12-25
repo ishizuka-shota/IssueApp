@@ -1,14 +1,20 @@
-﻿using System.Web.Mvc;
+﻿using System.Net;
+using System.Net.Http;
+using System.Web.Http;
 
 namespace IssueApp.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : ApiController
     {
-        public ActionResult Index()
+        [HttpGet]
+        [Route("home")]
+        public HttpResponseMessage Get()
         {
-            ViewBag.Title = "Home Page";
-
-            return View();
+            return new HttpResponseMessage()
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = new StringContent("ok")
+            };
         }
     }
 }
