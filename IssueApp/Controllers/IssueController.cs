@@ -105,12 +105,12 @@ namespace IssueApp.Controllers
                             });
                     });
 
-                    var text = issueList.Select(issue => $"```\nissueID\n{issue.Id}\nアサイン者\n{issue.Assignee.Name}\nタイトル\n{issue.Title}\n本文\n{issue.Body}\n登録者?{issue.User.Name}\n状態\n{issue.State.StringValue}\nクローズ者{issue.ClosedBy.Name}\n```").Aggregate("issue仮表示", (current, issueText) => current + issueText);
+                    // var text = issueList.Select(issue => $"```\nissueID\n{issue.Id}\nアサイン者\n{issue.Assignee.Name}\nタイトル\n{issue.Title}\n本文\n{issue.Body}\n登録者?{issue.User.Name}\n状態\n{issue.State.StringValue}\nクローズ者{issue.ClosedBy.Name}\n```").Aggregate("issue仮表示", (current, issueText) => current + issueText);
 
                     var model = new PostMessageModel()
                     {
                         Channel = data["channel_id"],
-                        Text = text,
+                        Text = "テキストだよ",
                         Response_type = "ephemeral"
                     };
 
