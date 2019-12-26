@@ -1,4 +1,5 @@
-﻿using IssueApp.GitHub;
+﻿using System;
+using IssueApp.GitHub;
 using IssueApp.Models.Json;
 using System.Collections.Generic;
 using System.Linq;
@@ -104,6 +105,16 @@ namespace IssueApp.Controllers
                             });
                     });
 
+                    foreach (var model in issueList.Select(issue => new PostMessageModel()
+                    {
+                        Channel = data["channel_id"],
+                        Text = $"issueの1個目を仮表示\n```\n" +
+                               $"issueID\n{issue.Id}\nアサイン者\n{issue.Assignee.Name}\nタイトル\n{issue.Title}\n本文\n{issue.Body}\n登録者?{issue.User.Name}\n状態\n{issue.State.StringValue}\nクローズ者{issue.ClosedBy.Name}\n```",
+                        Response_type = "ephemeral"
+                    }))
+                    {
+                        await SlackApi.ExecutePostApiAsJson(model, data["response_url"], data["team_id"]);
+                    }
 
                     break;
                 }

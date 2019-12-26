@@ -138,7 +138,7 @@ namespace IssueApp.Controllers
                     // =============================
                     var issue = await GitHubApi.Client.Issue.Create(repository.Split('/')[0], repository.Split('/')[1], newIssue);
 
-                    PostMessageModel model = new PostMessageModel()
+                    var model = new PostMessageModel()
                     {
                         Channel = data.Channel.Id,
                         Text = "Issueが登録されました" + Environment.NewLine + "https://github.com/" + repository + "/issues/" + issue.Number,
