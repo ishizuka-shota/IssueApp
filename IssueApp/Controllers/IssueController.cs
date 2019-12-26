@@ -111,7 +111,7 @@ namespace IssueApp.Controllers
                         var assigneesString = issue.Assignees.Any() ? string.Join(" ", issue.Assignees.Select(x => x.Name)) : "";
 
                         issueText =
-                            $"```\nissueID\n{issue.Id}\nアサイン者\n{assigneesString}\nタイトル\n{issue.Title}\n本文\n{issue.Body}\n登録者?{issue.User.Name}\n状態\n{issue.State.StringValue}\nクローズ者{issue.ClosedBy.Name}\n```";
+                            $"```\nissueID\n{issue.Number}\nアサイン者\n{assigneesString}\nタイトル\n{issue.Title}\n本文\n{issue.Body}\n登録者?{issue.User.Name}\n状態\n{issue.State.StringValue}\n```";
                     }
 
                     var model = new PostMessageModel()
