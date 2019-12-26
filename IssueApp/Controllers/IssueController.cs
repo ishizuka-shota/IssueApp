@@ -105,16 +105,16 @@ namespace IssueApp.Controllers
                             });
                     });
 
-                    foreach (var model in issueList.Select(issue => new PostMessageModel()
+                    var text = issueList.Select(issue => $"```\nissueID\n{issue.Id}\nアサイン者\n{issue.Assignee.Name}\nタイトル\n{issue.Title}\n本文\n{issue.Body}\n登録者?{issue.User.Name}\n状態\n{issue.State.StringValue}\nクローズ者{issue.ClosedBy.Name}\n```").Aggregate("issue仮表示", (current, issueText) => current + issueText);
+
+                    var model = new PostMessageModel()
                     {
                         Channel = data["channel_id"],
-                        Text = $"issueの1個目を仮表示\n```\n" +
-                               $"issueID\n{issue.Id}\nアサイン者\n{issue.Assignee.Name}\nタイトル\n{issue.Title}\n本文\n{issue.Body}\n登録者?{issue.User.Name}\n状態\n{issue.State.StringValue}\nクローズ者{issue.ClosedBy.Name}\n```",
+                        Text = text,
                         Response_type = "ephemeral"
-                    }))
-                    {
-                        await SlackApi.ExecutePostApiAsJson(model, data["response_url"], data["team_id"]);
-                    }
+                    };
+
+                    await SlackApi.ExecutePostApiAsJson(model, data["response_url"], data["team_id"]);
 
                     break;
                 }
