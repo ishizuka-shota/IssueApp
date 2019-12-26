@@ -108,10 +108,10 @@ namespace IssueApp.Controllers
                     var issueText = string.Empty;
                     foreach (var issue in issueList)
                     {
-                        var assigneesString = issue.Assignees.Any() ? string.Join(" ", issue.Assignees.Select(x => x.Name)) : "";
+                        var assigneesString = issue.Assignees.Any() ? string.Join(" ", issue.Assignees.Select(x => x.Login)) : "";
 
                         issueText +=
-                            $"```\n***issueID***\n{issue.Number}\n***アサイン者***\n{assigneesString}\n***タイトル***\n{issue.Title}\n***本文***\n{issue.Body}\n***登録者?***{issue.User.Name}\n***状態***\n{issue.State.StringValue}\n```";
+                            $"```\n***issueID***\n{issue.Number}\n***アサイン者***\n{assigneesString}\n***タイトル***\n{issue.Title}\n***本文***\n{issue.Body}\n***登録者?***{issue.User.Login}\n***状態***\n{issue.State.StringValue}\n```";
                     }
 
                     var model = new PostMessageModel()
